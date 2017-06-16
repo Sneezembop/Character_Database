@@ -1,4 +1,5 @@
-// CS 5200 FINAL PROJECT
+
+// CaS 5200 FINAL PROJECT
 // Nick Morgan, Miles Benjamin, AJ Esguerra
 
 var mysql = require('mysql');
