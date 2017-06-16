@@ -1,0 +1,15 @@
+{
+  "name": "finaldb",
+  "version": "1.0.0",
+  "description": "finaldb",
+  "main": "finalDb.js",
+  "dependencies": {
+    "mysql": "^2.13.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "node finaldb.js"
+  },
+  "author": "benjaminmmorgannesguerraa",
+  "license": "ISC"
+}
