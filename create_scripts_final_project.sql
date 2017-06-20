@@ -142,19 +142,15 @@ BEGIN
     
     DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
     SET sql_error = TRUE;
-    
-    START TRANSACTION;
 		
-        INSERT INTO class(class_name,armor_proficiency,weapon_proficiency,class_description,attribute1,attribute2)
-        VALUES (c_name, armor_prof, weapon_prof, class_desc, c_attrb1, c_attrb2);
+	INSERT INTO class(class_name,armor_proficiency,weapon_proficiency,class_description,attribute1,attribute2)
+	VALUES (c_name, armor_prof, weapon_prof, class_desc, c_attrb1, c_attrb2);
         
-        IF sql_error = FALSE THEN
-			COMMIT;
-            SELECT CONCAT('Class, ',mw_name, ', successfully added to game.') as Message;
-		ELSE
-			ROLLBACK;
-            SELECT 'Class not successfully added to game' as Message;
-		END IF;
+	IF sql_error = FALSE THEN
+		SELECT CONCAT('Class, ',mw_name, ', successfully added to game.') as Message;
+	ELSE
+		SELECT 'Class not successfully added to game' as Message;
+	END IF;
 END //
 DELIMITER ;
 
@@ -179,19 +175,15 @@ BEGIN
     
     DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
     SET sql_error = TRUE;
-    
-    START TRANSACTION;
-		
-        INSERT INTO spells(spell_name,spell_description,spell_damage,spell_healing,spell_hit,attribute)
-        VALUES (s_name,s_desc,s_damage,s_healing,s_hit,s_attribute);
+
+	INSERT INTO spells(spell_name,spell_description,spell_damage,spell_healing,spell_hit,attribute)
+	VALUES (s_name,s_desc,s_damage,s_healing,s_hit,s_attribute);
         
-        IF sql_error = FALSE THEN
-			COMMIT;
-            SELECT CONCAT('Spell, ',s_name, ', successfully added to game.') as Message;
-		ELSE
-			ROLLBACK;
-            SELECT 'Spell not successfully added to game' as Message;
-		END IF;
+	IF sql_error = FALSE THEN
+		SELECT CONCAT('Spell, ',s_name, ', successfully added to game.') as Message;
+	ELSE
+		SELECT 'Spell not successfully added to game' as Message;
+	END IF;
 END //
 DELIMITER ;
 
@@ -213,19 +205,15 @@ BEGIN
     
     DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
     SET sql_error = TRUE;
-    
-    START TRANSACTION;
-    
-    INSERT INTO skills(skill_name,skill_description,skill_attribute)
+        
+    INSERT INTO skills(skill_name,skill_description,attribute)
         VALUES (s_name,s_desc,s_attribute);
         
-        IF sql_error = FALSE THEN
-			COMMIT;
-            SELECT CONCAT('Skill, ',s_name, ', successfully added to game.') as Message;
-		ELSE
-			ROLLBACK;
-            SELECT 'Skill not successfully added to game' as Message;
-		END IF;
+	IF sql_error = FALSE THEN
+		SELECT CONCAT('Skill, ',s_name, ', successfully added to game.') as Message;
+	ELSE
+		SELECT 'Skill not successfully added to game' as Message;
+	END IF;
 END //
 DELIMITER ;
 
@@ -261,10 +249,21 @@ CREATE PROCEDURE create_character
  * User Input: character_name, character_class, player_email
  */
 BEGIN
+	DECLARE sql_error INT DEFAULT FALSE;
+    
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    SET sql_error = TRUE;
+    
 	INSERT INTO characters(character_name, class_id, player_id)
     VALUES (character_name_param, 
 		(SELECT class_id FROM class WHERE class_name = class_name_param), 
         (SELECT player_id FROM players WHERE player_email = player_email_param));
+	
+	IF sql_error = FALSE THEN
+		SELECT CONCAT('Character, ',character_name_param, ', successfully added to game.') as Message;
+	ELSE
+		SELECT 'Character not successfully added to game' as Message;
+	END IF;
 END //
 DELIMITER ;
 
@@ -282,6 +281,11 @@ CREATE PROCEDURE assign_armor_class
  * User Input: Class Name, Armor Name, Armor Quantity
  */
 BEGIN
+	DECLARE sql_error INT DEFAULT FALSE;
+    
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    SET sql_error = TRUE;
+    
 	DECLARE a_id INT;
     DECLARE class_prof ENUM('light','medium','heavy');
     DECLARE a_type ENUM('light','medium','heavy');
@@ -303,12 +307,16 @@ BEGIN
     FROM armor
     WHERE a_id = equipment_id;
     
-    IF class_prof == a_type THEN
-		INSERT INTO class_equipment_loadout
-        VALUES(c_id,a_id,quantity_param);
-        SELECT('Armor assignment successful') as Message;
-	ELSE 
-		SELECT('Armor assignment failed') as Message;
+    IF sql_error = FALSE THEN
+		IF class_prof = a_type THEN
+			INSERT INTO class_equipment_loadout
+			VALUES(c_id,a_id,quantity_param);
+			SELECT('Armor assignment successful') as Message;
+		ELSE 
+			SELECT('Armor assignment failed due to proficiency conflict') as Message;
+		END IF;
+	ELSE
+		SELECT 'Database error on armor assignment' as Message;
 	END IF;
 END //
 DELIMITER ;
