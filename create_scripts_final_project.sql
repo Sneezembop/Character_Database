@@ -802,10 +802,8 @@ BEGIN
     INTO primary2
     FROM characters c join class cl
 		ON c.class_id = cl.class_id;
-    
-    START TRANSACTION;
-    
-		IF new_level > old_level THEN
+    IF new_level > old_level THEN
+		START TRANSACTION;
 			IF new_level % 2 = 0 THEN
 				CASE 
 					WHEN primary1 = 'strength' THEN
@@ -893,7 +891,7 @@ BEGIN
                 SET current_health_points = total_health_points;
 			END IF;
             
-		END IF;
+	END IF;
 	IF sql_error = FALSE THEN
 		COMMIT;
 		SELECT CONCAT('You leveled up!  Attributes have increased, and Health Points have been increased.') as Message;
