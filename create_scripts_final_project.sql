@@ -476,3 +476,61 @@ BEGIN
 END //
 
 DELIMITER ;
+
+
+/** character name change **/
+DROP PROCEDURE IF EXISTS change_char_name;
+DELIMITER //
+CREATE PROCEDURE change_char_name
+(
+    old_name_param	VARCHAR(64),
+    new_name_param	VARCHAR(64)
+)
+BEGIN
+	DECLARE sql_error INT DEFAULT FALSE;
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    SET sql_error = TRUE;
+        
+	UPDATE characters
+	SET character_name = new_name_param
+	WHERE character_name = old_name_param;
+
+
+	IF sql_error = FALSE THEN
+		COMMIT;
+		SELECT CONCAT(old_name_param, ', successfully changed to ', new_name_param) as Message;
+	ELSE
+		ROLLBACK;
+		SELECT 'Character name change was not successful' as Message;
+	END IF;
+END //
+
+DELIMITER ;
+
+/** player email change **/
+DROP PROCEDURE IF EXISTS player_email_change;
+DELIMITER //
+	CREATE PROCEDURE player_email_change
+	(
+		old_email_param	VARCHAR(64),
+		new_email_param	VARCHAR(64)
+	)
+BEGIN
+	DECLARE sql_error INT DEFAULT FALSE;
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    SET sql_error = TRUE;
+        
+	UPDATE players
+	SET player_email = new_email_param
+	WHERE player_email = old_email_param;
+
+	IF sql_error = FALSE THEN
+		COMMIT;
+		SELECT CONCAT(old_email_param, ', successfully changed to ', new_email_param) as Message;
+	ELSE
+		ROLLBACK;
+		SELECT 'Player email change was not successful' as Message;
+	END IF;
+END //
+
+DELIMITER ;
