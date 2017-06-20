@@ -327,6 +327,8 @@ BEGIN
 END //
 DELIMITER ;
 
+
+DROP PROCEDURE IF EXISTS assign_weapon_class;
 DELIMITER //
 CREATE PROCEDURE assign_weapon_class
 (
@@ -382,6 +384,45 @@ BEGIN
 		END IF;
 	ELSE
 		SELECT 'Database error on weapon assignment' as Message;
+	END IF;
+END //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS assign_misc_equipment_class;
+DELIMITER //
+CREATE PROCEDURE assign_misc_equipment_class
+(
+	class_name_param VARCHAR(64),
+    equipment_name_param VARCHAR(64),
+    quantity_param INT
+)
+/**
+ * Procedure to assign weapon to a class
+ * User Input: Class Name, Weapon Name, Weapon Quantity, Range/Melee
+ */
+BEGIN
+	DECLARE sql_error INT DEFAULT FALSE;
+    
+	DECLARE c_id INT;
+    DECLARE e_id INT;
+    
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    SET sql_error = TRUE;
+    
+    SELECT equipment_id INTO e_id
+    FROM equipment
+    WHERE equipment_name = equipment_name_param;
+    
+    SELECT class_id into c_id
+    FROM class
+    WHERE class_name = class_name_param;
+    
+    IF sql_error = FALSE THEN
+		INSERT INTO class_equipment_loadout
+		VALUES(c_id,e_id,quantity_param);
+		SELECT('Equipment assignment successful') as Message;
+	ELSE 
+		SELECT('Equipment assignment failed') as Message;
 	END IF;
 END //
 DELIMITER ;
