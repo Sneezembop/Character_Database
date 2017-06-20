@@ -960,3 +960,73 @@ BEGIN
 END //
 
 DELIMITER ;
+
+
+/** read equipment detail**/
+DROP PROCEDURE IF EXISTS read_equipment_detail;
+DELIMITER //
+CREATE PROCEDURE read_equipment_detail
+(
+	char_id_param	INT
+)
+BEGIN        
+	SELECT *
+	FROM character_equipment ce join equipment e join armor a join melee_weapons mw
+		ON ce.char_id = char_id_param
+			AND ce.equip_id = e.equipment_id
+            AND e.equipment_id = a.equipment_id
+            AND e.equipment_id = mw.equipment_id
+    WHERE ce.char_id = char_id_param;
+END //
+
+DELIMITER ;
+
+/** read spells detail**/
+DROP PROCEDURE IF EXISTS read_spells_detail;
+DELIMITER //
+CREATE PROCEDURE read_spells_detail
+(
+	char_id_param	INT
+)
+BEGIN        
+	SELECT *
+	FROM class_spells cs join spells
+		ON cs.spell_id = spells.spell_id
+    WHERE cs.char_id = char_id_param;
+END //
+
+DELIMITER ;
+
+
+/** read skills detail**/
+DROP PROCEDURE IF EXISTS read_skills_detail;
+DELIMITER //
+CREATE PROCEDURE read_skills_detail
+(
+	char_id_param	INT
+)
+BEGIN        
+	SELECT *
+	FROM class_skills cs join skills
+		ON cs.skill_id = skills.skill_id
+    WHERE cs.char_id = char_id_param;
+END //
+
+DELIMITER ;
+
+/**char name, level, health **/
+DROP PROCEDURE IF EXISTS read_basic_char_info;
+DELIMITER //
+CREATE PROCEDURE read_basic_char_info
+(
+	char_id_param	INT
+)
+BEGIN        
+	SELECT character_name, health_points, character_level
+	FROM characters
+    WHERE character_id = char_id_param;
+END //
+
+DELIMITER ;
+
+
