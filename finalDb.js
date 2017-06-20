@@ -15,6 +15,8 @@ var connection = mysql.createConnection({
 
 var prompt = require('prompt');
 
+// GLOBALS
+var playerID = 0;
 
 main();
 
@@ -69,16 +71,26 @@ function getUserInput(params, callback) {
 var ValidCommands = ['CREATE', 'DELETE', 'UPDATE', 'VIEW', 'QUIT'];
 
 function processLogin(input) {
-    connection.query('SELECT * FROM players WHERE player_email LIKE \'' + input.userEmail + '\'', function (error, results, fields) {
+    connection.query('SELECT * FROM players WHERE player_email LIKE \'' + input.userEmail + '\';', function (error, results, fields) {
         if (error) throw error;
-        if (results != []){
-            console.log('WELCOME!');
-            quit();
+
+        console.log("results:", results);
+        if (results[0] == undefined){
+            console.log("PLAYER NOT FOUND, PLEASE ENTER THE FOLLOWING INFO TO CREATE ACCOUNT");
+            getUserInput(['email', 'firstName', 'lastName'], processCreatePlayer);
         } else {
-            console.log('PLAYER NOT FOUND. ENTER INFO TO CREATE ACCOUNT.');
-           // getUserInput([])
+            playerID = results[0].player_id;
+            console.log("WELCOME "+ results[0].player_fname + "!");
+            quit();
         }
-        
+    });
+}
+
+function processCreatePlayer(input){
+    connection.query('CALL create_player(\'' + input.email + '\', \'' + input.firstName + '\', \'' + input.lastName + '\')', function (error, results, fields) {
+        if (error) throw error;
+        console.log ("PLAYER CREATED, PLEASE LOG IN");
+        getUserInput(['userEmail', 'password'], processLogin);
     });
 }
 
