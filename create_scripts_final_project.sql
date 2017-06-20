@@ -773,9 +773,17 @@ BEGIN
     DECLARE new_level INT;
     DECLARE primary1 VARCHAR(64);
     DECLARE primary2 VARCHAR(64);
+    DECLARE character_cons_mod INT;
+    DECLARE char_current_health INT;
+    DECLARE char_total_health INT;
+    DECLARE char_id INT:
     
     DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
     SET sql_error = TRUE;
+    
+    SELECT OLD.character_id
+    INTO char_id
+    FROM characters;
     
     SELECT OLD.character_level
     INTO old_level
@@ -818,7 +826,7 @@ BEGIN
                     WHEN primary1 = 'constitution' THEN
 						UPDATE characters
 						SET constitution = constitution + 1;
-				END CASE
+				END CASE;
                 CASE 
 					WHEN primary2 = 'strength' THEN
 						UPDATE characters
@@ -859,11 +867,39 @@ BEGIN
 				UPDATE characters
 				SET constitution = constitution + 1;
 			END IF;
+            
+            SELECT constitution INTO character_cons_mod
+            FROM characters
+            WHERE character_id = char_id;
+            
+            UPDATE health_points
+            SET total_health_points = total_health_points + character_cons_mod
+            WHERE character_id = char_id;
+            
+            UPDATE health_points
+            SET current_health_points = current_health_points + character_cons_mod
+            WHERE character_id = char_id;
+            
+            SELECT total_health_points INTO char_total_health
+            FROM health_points
+            WHERE character_id = char_id;
+            
+            SELECT current_health_points INTO char_current_health
+            FROM health_points
+            WHERE character_id = char_id;
+            
+            IF char_current_health > total_health_points THEN
+				UPDATE health_points
+                SET current_health_points = total_health_points;
+			END IF;
+            
 		END IF;
 	IF sql_error = FALSE THEN
-		SELECT CONCAT('You leveled up!  Attributes have increased.') as Message;
+		COMMIT;
+		SELECT CONCAT('You leveled up!  Attributes have increased, and Health Points have been increased.') as Message;
 	ELSE
-		SELECT 'Failed to update attributes' as Message;
+		ROLLBACK;
+		SELECT 'Failed to Level Up' as Message;
 	END IF;
 END//
         
