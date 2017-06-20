@@ -427,6 +427,84 @@ BEGIN
 END //
 DELIMITER ;
 
+DROP PROCEDURE IF EXISTS assign_spells_class;
+DELIMITER //
+CREATE PROCEDURE assign_spells_class
+(
+	class_name_param VARCHAR(64),
+    spell_name_param VARCHAR(64),
+    level_param INT
+)
+/**
+ * Procedure to assign spell to a class
+ * User Input: Class Name, Spell Name, Spell Level
+ */
+BEGIN
+	DECLARE sql_error INT DEFAULT FALSE;
+    
+	DECLARE c_id INT;
+    DECLARE s_id INT;
+    
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    SET sql_error = TRUE;
+    
+    SELECT spell_id INTO s_id
+    FROM spells
+    WHERE spell_name = spell_name_param;
+    
+    SELECT class_id into c_id
+    FROM class
+    WHERE class_name = class_name_param;
+    
+    IF sql_error = FALSE THEN
+		INSERT INTO class_spells
+		VALUES(c_id,s_id,level_param);
+		SELECT('Spell assignment successful') as Message;
+	ELSE 
+		SELECT('Spell assignment failed') as Message;
+	END IF;
+END //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS assign_skills_class;
+DELIMITER //
+CREATE PROCEDURE assign_skills_class
+(
+	class_name_param VARCHAR(64),
+    skill_name_param VARCHAR(64),
+    level_param INT
+)
+/**
+ * Procedure to assign skill to a class
+ * User Input: Class Name, Skill Name, Skill Level
+ */
+BEGIN
+	DECLARE sql_error INT DEFAULT FALSE;
+    
+	DECLARE c_id INT;
+    DECLARE s_id INT;
+    
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    SET sql_error = TRUE;
+    
+    SELECT skill_id INTO s_id
+    FROM skills
+    WHERE skill_name = skill_name_param;
+    
+    SELECT class_id into c_id
+    FROM class
+    WHERE class_name = class_name_param;
+    
+    IF sql_error = FALSE THEN
+		INSERT INTO class_skills
+		VALUES(c_id,s_id,level_param);
+		SELECT('Skill assignment successful') as Message;
+	ELSE 
+		SELECT('Skill assignment failed') as Message;
+	END IF;
+END //
+DELIMITER ;
+
 
 -- DELETE DATA SCRIPTS BELOW:
 
