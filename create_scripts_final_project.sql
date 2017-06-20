@@ -904,3 +904,46 @@ BEGIN
 END//
         
 DELIMITER ;
+
+
+/** read all players**/
+DROP PROCEDURE IF EXISTS read_all_players;
+DELIMITER //
+CREATE PROCEDURE read_all_players()
+BEGIN        
+	SELECT *
+	FROM players;
+END //
+
+DELIMITER ;
+
+/** read players detail**/
+DROP PROCEDURE IF EXISTS read_player_detail;
+DELIMITER //
+CREATE PROCEDURE read_player_detail
+(
+	player_email_param	VARCHAR(64)
+)
+BEGIN        
+	SELECT *
+	FROM players
+    WHERE player_email = player_email_param;
+END //
+
+DELIMITER ;
+
+
+/** read character detail**/
+DROP PROCEDURE IF EXISTS read_character_detail;
+DELIMITER //
+CREATE PROCEDURE read_character_detail
+(
+	char_name_param	VARCHAR(64)
+)
+BEGIN        
+	SELECT *
+	FROM characters
+    WHERE character_name = char_name_param;
+END //
+
+DELIMITER ;
