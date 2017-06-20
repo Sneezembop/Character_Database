@@ -890,14 +890,15 @@ BEGIN
 				UPDATE health_points
                 SET current_health_points = total_health_points;
 			END IF;
-            
+		
+        IF sql_error = FALSE THEN
+			COMMIT;
+			SELECT CONCAT('You leveled up!  Attributes have increased, and Health Points have been increased.') as Message;
+		ELSE
+			ROLLBACK;
+			SELECT 'Failed to Level Up' as Message;
 	END IF;
-	IF sql_error = FALSE THEN
-		COMMIT;
-		SELECT CONCAT('You leveled up!  Attributes have increased, and Health Points have been increased.') as Message;
-	ELSE
-		ROLLBACK;
-		SELECT 'Failed to Level Up' as Message;
+            
 	END IF;
 END//
         
