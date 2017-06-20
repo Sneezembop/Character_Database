@@ -186,3 +186,33 @@ BEGIN
 		END IF;
 END //
 DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS create_player;
+DELIMITER //
+CREATE PROCEDURE create_player
+(
+    email_param	VARCHAR(24),
+    fname_param	VARCHAR(24),
+    lname_param	VARCHAR(24)
+)
+BEGIN
+	INSERT INTO players (player_email, player_fname, player_lname)
+    VALUES (email_param, fname_param, lname_param);
+END //
+DELIMITER ;
+
+/** Create char procedure ***/
+DROP PROCEDURE IF EXISTS create_character;
+DELIMITER //
+CREATE PROCEDURE create_character
+(
+    character_name_param	VARCHAR(24),
+    class_name_param	VARCHAR(24)
+)
+BEGIN
+	INSERT INTO players (player_email, player_fname, player_lname)
+    VALUES (email_param, fname_param, lname_param);
+END //
+DELIMITER ;
+
