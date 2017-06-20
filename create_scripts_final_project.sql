@@ -1022,8 +1022,9 @@ CREATE PROCEDURE read_basic_char_info
 	char_id_param	INT
 )
 BEGIN        
-	SELECT character_name, health_points, character_level
-	FROM characters
+	SELECT c.character_name, c.health_points, c.character_level, cl.class_name
+	FROM characters c join class cl
+		on c.class_id = cl.class_id
     WHERE character_id = char_id_param;
 END //
 
