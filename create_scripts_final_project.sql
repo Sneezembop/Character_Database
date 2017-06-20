@@ -321,4 +321,158 @@ BEGIN
 END //
 DELIMITER ;
     
-    
+/** delete char procedure ***/
+DROP PROCEDURE IF EXISTS delete_character;
+DELIMITER //
+CREATE PROCEDURE delete_character
+(
+    character_name_param	VARCHAR(64)
+)
+BEGIN
+	DECLARE sql_error INT DEFAULT FALSE;
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    SET sql_error = TRUE;
+        
+	DELETE FROM characters
+	WHERE character_name = character_name_param;
+	
+	IF sql_error = FALSE THEN
+		COMMIT;
+		SELECT CONCAT('Character , ',character_name_param, ', successfully deleted from game.') as Message;
+	ELSE
+		ROLLBACK;
+		SELECT 'Character deletion was not successful' as Message;
+	END IF;
+END //
+
+DELIMITER ;
+
+/** delete spells procedure ***/
+DROP PROCEDURE IF EXISTS delete_spells;
+DELIMITER //
+CREATE PROCEDURE delete_spells
+(
+    spell_name_param	VARCHAR(64)
+)
+BEGIN
+	DECLARE sql_error INT DEFAULT FALSE;
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    SET sql_error = TRUE;
+        
+	DELETE FROM spells
+	WHERE spell_name = spells_name_param;
+	
+	IF sql_error = FALSE THEN
+		COMMIT;
+		SELECT CONCAT('Spell , ',spell_name_param, ', successfully deleted from game.') as Message;
+	ELSE
+		ROLLBACK;
+		SELECT 'Spell deletion was not successful' as Message;
+	END IF;
+END //
+
+DELIMITER ;
+
+/** delete skills procedure ***/
+DROP PROCEDURE IF EXISTS delete_skills;
+DELIMITER //
+CREATE PROCEDURE delete_skills
+(
+    skill_name_param	VARCHAR(64)
+)
+BEGIN
+	DECLARE sql_error INT DEFAULT FALSE;
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    SET sql_error = TRUE;
+        
+	DELETE FROM skills
+	WHERE skill_name = skill_name_param;
+	
+	IF sql_error = FALSE THEN
+		COMMIT;
+		SELECT CONCAT('Skill , ',skill_name_param, ', successfully deleted from game.') as Message;
+	ELSE
+		ROLLBACK;
+		SELECT 'Skill deletion was not successful' as Message;
+	END IF;
+END //
+
+DELIMITER ;
+
+/** delete equipment procedure ***/
+DROP PROCEDURE IF EXISTS delete_equipment;
+DELIMITER //
+CREATE PROCEDURE delete_equipment
+(
+    equipment_name_param	VARCHAR(64)
+)
+BEGIN
+	DECLARE sql_error INT DEFAULT FALSE;
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    SET sql_error = TRUE;
+        
+	DELETE FROM equipment
+	WHERE equipment_name = equipment_name_param;
+	
+	IF sql_error = FALSE THEN
+		COMMIT;
+		SELECT CONCAT('Equipment , ',equipment_name_param, ', successfully deleted from game.') as Message;
+	ELSE
+		ROLLBACK;
+		SELECT 'Equipment deletion was not successful' as Message;
+	END IF;
+END //
+
+DELIMITER ;
+
+/** delete player procedure ***/
+DROP PROCEDURE IF EXISTS delete_player;
+DELIMITER //
+CREATE PROCEDURE delete_player
+(
+    player_email_param	VARCHAR(64)
+)
+BEGIN
+	DECLARE sql_error INT DEFAULT FALSE;
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    SET sql_error = TRUE;
+        
+	DELETE FROM players
+	WHERE player_email = player_email_param;
+	
+	IF sql_error = FALSE THEN
+		COMMIT;
+		SELECT CONCAT('Player , ',player_email_param, ', successfully deleted from game.') as Message;
+	ELSE
+		ROLLBACK;
+		SELECT 'Player deletion was not successful' as Message;
+	END IF;
+END //
+
+DELIMITER ;
+
+/** delete class procedure ***/
+DROP PROCEDURE IF EXISTS delete_class;
+DELIMITER //
+CREATE PROCEDURE delete_class
+(
+    class_name_param	VARCHAR(64)
+)
+BEGIN
+	DECLARE sql_error INT DEFAULT FALSE;
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    SET sql_error = TRUE;
+        
+	DELETE FROM class
+	WHERE class_name = class_name_param;
+	
+	IF sql_error = FALSE THEN
+		COMMIT;
+		SELECT CONCAT('Class , ',class_name_param, ', successfully deleted from game.') as Message;
+	ELSE
+		ROLLBACK;
+		SELECT 'Class deletion was not successful' as Message;
+	END IF;
+END //
+
+DELIMITER ;
