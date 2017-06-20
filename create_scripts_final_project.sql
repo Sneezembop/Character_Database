@@ -268,3 +268,49 @@ BEGIN
 END //
 DELIMITER ;
 
+DROP PROCEDURE IF EXISTS assign_armor_class;
+
+DELIMITER //
+CREATE PROCEDURE assign_armor_class
+(
+	class_name_param VARCHAR(64),
+    armor_name_param VARCHAR(64),
+    quantity_param INT
+)
+/**
+ * Procedure to assign armor to a class
+ * User Input: Class Name, Armor Name, Armor Quantity
+ */
+BEGIN
+	DECLARE a_id INT;
+    DECLARE class_prof ENUM('light','medium','heavy');
+    DECLARE a_type ENUM('light','medium','heavy');
+    DECLARE c_id INT;
+    
+    SELECT equipment_id INTO a_id
+    FROM equipment
+    WHERE equipment_name = armor_name_param;
+    
+    SELECT class_id into c_id
+    FROM class
+    WHERE class_name = class_name_param;
+    
+    SELECT armor_proficiency INTO class_prof
+	FROM class
+    WHERE class_id = c_id;
+    
+    SELECT armor_type INTO a_type
+    FROM armor
+    WHERE a_id = equipment_id;
+    
+    IF class_prof == a_type THEN
+		INSERT INTO class_equipment_loadout
+        VALUES(c_id,a_id,quantity_param);
+        SELECT('Armor assignment successful') as Message;
+	ELSE 
+		SELECT('Armor assignment failed') as Message;
+	END IF;
+END //
+DELIMITER ;
+    
+    
