@@ -109,15 +109,14 @@ CREATE TABLE `characters` (
   `character_id` int(11) NOT NULL AUTO_INCREMENT,
   `character_name` varchar(24) NOT NULL,
   `class_id` int(11) NOT NULL,
-  `health_points` int(11) NOT NULL DEFAULT '10',
   `character_level` int(11) NOT NULL DEFAULT '1',
   `player_id` int(11) NOT NULL,
-  `strength` int(11) NOT NULL DEFAULT '8',
-  `dexterity` int(11) NOT NULL DEFAULT '8',
-  `constitution` int(11) NOT NULL DEFAULT '8',
-  `intelligence` int(11) NOT NULL DEFAULT '8',
-  `wisdom` int(11) NOT NULL DEFAULT '8',
-  `charisma` int(11) NOT NULL DEFAULT '8',
+  `strength` int(11) NOT NULL DEFAULT '0',
+  `dexterity` int(11) NOT NULL DEFAULT '0',
+  `constitution` int(11) NOT NULL DEFAULT '0',
+  `intelligence` int(11) NOT NULL DEFAULT '0',
+  `wisdom` int(11) NOT NULL DEFAULT '0',
+  `charisma` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`character_id`),
   UNIQUE KEY `character_name_UNIQUE` (`character_name`),
   KEY `class_id_fk_idx` (`class_id`),
@@ -274,6 +273,31 @@ INSERT INTO `equipment` VALUES (1,'cloth armor',5,'robes typically worn by magic
 UNLOCK TABLES;
 
 --
+-- Table structure for table `health_points`
+--
+
+DROP TABLE IF EXISTS `health_points`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `health_points` (
+  `character_id` int(11) NOT NULL,
+  `total_health_points` int(11) NOT NULL DEFAULT '5',
+  `current_health_points` int(11) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`character_id`),
+  CONSTRAINT `character_id_fk_hp` FOREIGN KEY (`character_id`) REFERENCES `characters` (`character_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `health_points`
+--
+
+LOCK TABLES `health_points` WRITE;
+/*!40000 ALTER TABLE `health_points` DISABLE KEYS */;
+/*!40000 ALTER TABLE `health_points` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `melee_weapons`
 --
 
@@ -314,6 +338,7 @@ CREATE TABLE `players` (
   `player_email` varchar(64) NOT NULL,
   `player_fname` varchar(64) NOT NULL,
   `player_lname` varchar(64) NOT NULL,
+  `game_admin` enum('Y','N') NOT NULL DEFAULT 'N',
   PRIMARY KEY (`player_id`,`player_email`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -324,7 +349,7 @@ CREATE TABLE `players` (
 
 LOCK TABLES `players` WRITE;
 /*!40000 ALTER TABLE `players` DISABLE KEYS */;
-INSERT INTO `players` VALUES (1,'test_user@thebestgame.com','Test','User');
+INSERT INTO `players` VALUES (1,'test_user@thebestgame.com','Test','User','N');
 /*!40000 ALTER TABLE `players` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -420,6 +445,65 @@ UNLOCK TABLES;
 --
 -- Dumping routines for database 'mydb'
 --
+/*!50003 DROP PROCEDURE IF EXISTS `assign_armor_class` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `assign_armor_class`(
+	class_name_param VARCHAR(64),
+    armor_name_param VARCHAR(64),
+    quantity_param INT
+)
+BEGIN
+	DECLARE sql_error INT DEFAULT FALSE;
+    
+	DECLARE a_id INT;
+    DECLARE class_prof ENUM('light','medium','heavy');
+    DECLARE a_type ENUM('light','medium','heavy');
+    DECLARE c_id INT;
+    
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    SET sql_error = TRUE;
+    
+    SELECT equipment_id INTO a_id
+    FROM equipment
+    WHERE equipment_name = armor_name_param;
+    
+    SELECT class_id into c_id
+    FROM class
+    WHERE class_name = class_name_param;
+    
+    SELECT armor_proficiency INTO class_prof
+	FROM class
+    WHERE class_id = c_id;
+    
+    SELECT armor_type INTO a_type
+    FROM armor
+    WHERE a_id = equipment_id;
+    
+    IF sql_error = FALSE THEN
+		IF class_prof = a_type THEN
+			INSERT INTO class_equipment_loadout
+			VALUES(c_id,a_id,quantity_param);
+			SELECT('Armor assignment successful') as Message;
+		ELSE 
+			SELECT('Armor assignment failed due to proficiency conflict') as Message;
+		END IF;
+	ELSE
+		SELECT 'Database error on armor assignment' as Message;
+	END IF;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!50003 DROP PROCEDURE IF EXISTS `create_armor` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -430,7 +514,13 @@ UNLOCK TABLES;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `create_armor`(a_name VARCHAR(64),a_weight INT,a_description VARCHAR(140),a_rating INT,a_type ENUM('light','medium','heavy'))
+CREATE DEFINER=`root`@`localhost` PROCEDURE `create_armor`(
+	a_name VARCHAR(64),
+    a_weight INT,
+    a_description VARCHAR(140),
+    a_rating INT,
+    a_type ENUM('light','medium','heavy')
+)
 BEGIN
 	DECLARE sql_error INT DEFAULT FALSE;
     
@@ -474,10 +564,21 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `create_character`(
     player_email_param VARCHAR(24)
 )
 BEGIN
+	DECLARE sql_error INT DEFAULT FALSE;
+    
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    SET sql_error = TRUE;
+    
 	INSERT INTO characters(character_name, class_id, player_id)
     VALUES (character_name_param, 
 		(SELECT class_id FROM class WHERE class_name = class_name_param), 
         (SELECT player_id FROM players WHERE player_email = player_email_param));
+	
+	IF sql_error = FALSE THEN
+		SELECT CONCAT('Character, ',character_name_param, ', successfully added to game.') as Message;
+	ELSE
+		SELECT 'Character not successfully added to game' as Message;
+	END IF;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -494,8 +595,16 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `create_melee_weapon`(mw_name VARCHAR(64),mw_weight INT, mw_hit INT, mw_damage INT, 
-	mw_type ENUM('simple','martial','exotic'), mw_reach INT, mw_attribute ENUM('strength', 'dexterity'),mw_desc VARCHAR(140))
+CREATE DEFINER=`root`@`localhost` PROCEDURE `create_melee_weapon`(
+	mw_name VARCHAR(64),
+    mw_weight INT, 
+    mw_hit INT, 
+    mw_damage INT, 
+	mw_type ENUM('simple','martial','exotic'), 
+    mw_reach INT, 
+    mw_attribute ENUM('strength', 'dexterity'),
+    mw_desc VARCHAR(140)
+)
 BEGIN
 	DECLARE sql_error INT DEFAULT FALSE;
     
@@ -533,26 +642,28 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `create_new_class`(c_name VARCHAR(64),armor_prof ENUM('light','medium','heavy'), weapon_prof ENUM('simple','martial','exotic'),
-	class_desc VARCHAR(140),c_attrb1 ENUM('strength','intelligence','dexterity','wisdom','charisma','constitution'), c_attrb2 ENUM('strength','intelligence','dexterity','wisdom','charisma','constitution'))
+CREATE DEFINER=`root`@`localhost` PROCEDURE `create_new_class`(
+	c_name VARCHAR(64),
+    armor_prof ENUM('light','medium','heavy'), 
+    weapon_prof ENUM('simple','martial','exotic'),
+	class_desc VARCHAR(140),
+    c_attrb1 ENUM('strength','intelligence','dexterity','wisdom','charisma','constitution'), 
+    c_attrb2 ENUM('strength','intelligence','dexterity','wisdom','charisma','constitution')
+)
 BEGIN
 	DECLARE sql_error INT DEFAULT FALSE;
     
     DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
     SET sql_error = TRUE;
-    
-    START TRANSACTION;
 		
-        INSERT INTO class(class_name,armor_proficiency,weapon_proficiency,class_description,attribute1,attribute2)
-        VALUES (c_name, armor_prof, weapon_prof, class_desc, c_attrb1, c_attrb2);
+	INSERT INTO class(class_name,armor_proficiency,weapon_proficiency,class_description,attribute1,attribute2)
+	VALUES (c_name, armor_prof, weapon_prof, class_desc, c_attrb1, c_attrb2);
         
-        IF sql_error = FALSE THEN
-			COMMIT;
-            SELECT CONCAT('Class, ',mw_name, ', successfully added to game.') as Message;
-		ELSE
-			ROLLBACK;
-            SELECT 'Class not successfully added to game' as Message;
-		END IF;
+	IF sql_error = FALSE THEN
+		SELECT CONCAT('Class, ',mw_name, ', successfully added to game.') as Message;
+	ELSE
+		SELECT 'Class not successfully added to game' as Message;
+	END IF;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -579,19 +690,15 @@ BEGIN
     
     DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
     SET sql_error = TRUE;
-    
-    START TRANSACTION;
-    
+        
     INSERT INTO skills(skill_name,skill_description,attribute)
         VALUES (s_name,s_desc,s_attribute);
         
-        IF sql_error = FALSE THEN
-			COMMIT;
-            SELECT CONCAT('Skill, ',s_name, ', successfully added to game.') as Message;
-		ELSE
-			ROLLBACK;
-            SELECT 'Skill not successfully added to game' as Message;
-		END IF;
+	IF sql_error = FALSE THEN
+		SELECT CONCAT('Skill, ',s_name, ', successfully added to game.') as Message;
+	ELSE
+		SELECT 'Skill not successfully added to game' as Message;
+	END IF;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -608,26 +715,28 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `create_new_spell`(s_name VARCHAR(64),s_desc VARCHAR(128),s_damage INT,
-	s_healing INT,s_hit INT,s_attribute ENUM('intelligence','wisdom','charisma'))
+CREATE DEFINER=`root`@`localhost` PROCEDURE `create_new_spell`(
+	s_name VARCHAR(64),
+    s_desc VARCHAR(128),
+    s_damage INT,
+	s_healing INT,
+    s_hit INT,
+    s_attribute ENUM('intelligence','wisdom','charisma')
+)
 BEGIN
 	DECLARE sql_error INT DEFAULT FALSE;
     
     DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
     SET sql_error = TRUE;
-    
-    START TRANSACTION;
-		
-        INSERT INTO spells(spell_name,spell_description,spell_damage,spell_healing,spell_hit,attribute)
-        VALUES (s_name,s_desc,s_damage,s_healing,s_hit,s_attribute);
+
+	INSERT INTO spells(spell_name,spell_description,spell_damage,spell_healing,spell_hit,attribute)
+	VALUES (s_name,s_desc,s_damage,s_healing,s_hit,s_attribute);
         
-        IF sql_error = FALSE THEN
-			COMMIT;
-            SELECT CONCAT('Spell, ',s_name, ', successfully added to game.') as Message;
-		ELSE
-			ROLLBACK;
-            SELECT 'Spell not successfully added to game' as Message;
-		END IF;
+	IF sql_error = FALSE THEN
+		SELECT CONCAT('Spell, ',s_name, ', successfully added to game.') as Message;
+	ELSE
+		SELECT 'Spell not successfully added to game' as Message;
+	END IF;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -668,8 +777,14 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `create_ranged_weapon`(rw_name VARCHAR(64),rw_weight INT, rw_hit INT, rw_damage INT, 
-	rw_type ENUM('simple','martial','exotic'), rw_distance INT, rw_attribute ENUM('strength', 'dexterity'),rw_description VARCHAR(140), rw_projectile VARCHAR(64))
+CREATE DEFINER=`root`@`localhost` PROCEDURE `create_ranged_weapon`(
+	rw_name VARCHAR(64),
+    rw_weight INT, rw_hit INT,
+    rw_damage INT, 
+    rw_type ENUM('simple','martial','exotic'), 
+    rw_distance INT, rw_attribute ENUM('strength', 'dexterity'),
+    rw_description VARCHAR(140), rw_projectile VARCHAR(64)
+)
 BEGIN
 	DECLARE sql_error INT DEFAULT FALSE;
     
@@ -698,6 +813,198 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `delete_character` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `delete_character`(
+    character_name_param	VARCHAR(64)
+)
+BEGIN
+	DECLARE sql_error INT DEFAULT FALSE;
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    SET sql_error = TRUE;
+        
+	DELETE FROM characters
+	WHERE character_name = character_name_param;
+	
+	IF sql_error = FALSE THEN
+		SELECT CONCAT('Character , ',character_name_param, ', successfully deleted from game.') as Message;
+	ELSE
+		SELECT 'Character deletion was not successful' as Message;
+	END IF;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `delete_class` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `delete_class`(
+    class_name_param	VARCHAR(64)
+)
+BEGIN
+	DECLARE sql_error INT DEFAULT FALSE;
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    SET sql_error = TRUE;
+        
+	DELETE FROM class
+	WHERE class_name = class_name_param;
+	
+	IF sql_error = FALSE THEN
+		SELECT CONCAT('Class , ',class_name_param, ', successfully deleted from game.') as Message;
+	ELSE
+		SELECT 'Class deletion was not successful' as Message;
+	END IF;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `delete_equipment` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `delete_equipment`(
+    equipment_name_param	VARCHAR(64)
+)
+BEGIN
+	DECLARE sql_error INT DEFAULT FALSE;
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    SET sql_error = TRUE;
+        
+	DELETE FROM equipment
+	WHERE equipment_name = equipment_name_param;
+	
+	IF sql_error = FALSE THEN
+		SELECT CONCAT('Equipment , ',equipment_name_param, ', successfully deleted from game.') as Message;
+	ELSE
+		SELECT 'Equipment deletion was not successful' as Message;
+	END IF;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `delete_player` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `delete_player`(
+    player_email_param	VARCHAR(64)
+)
+BEGIN
+	DECLARE sql_error INT DEFAULT FALSE;
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    SET sql_error = TRUE;
+        
+	DELETE FROM players
+	WHERE player_email = player_email_param;
+	
+	IF sql_error = FALSE THEN
+		SELECT CONCAT('Player , ',player_email_param, ', successfully deleted from game.') as Message;
+	ELSE
+		SELECT 'Player deletion was not successful' as Message;
+	END IF;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `delete_skills` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `delete_skills`(
+    skill_name_param	VARCHAR(64)
+)
+BEGIN
+	DECLARE sql_error INT DEFAULT FALSE;
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    SET sql_error = TRUE;
+        
+	DELETE FROM skills
+	WHERE skill_name = skill_name_param;
+	
+	IF sql_error = FALSE THEN
+		SELECT CONCAT('Skill , ',skill_name_param, ', successfully deleted from game.') as Message;
+	ELSE
+		SELECT 'Skill deletion was not successful' as Message;
+	END IF;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `delete_spells` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `delete_spells`(
+    spell_name_param	VARCHAR(64)
+)
+BEGIN
+	DECLARE sql_error INT DEFAULT FALSE;
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    SET sql_error = TRUE;
+        
+	DELETE FROM spells
+	WHERE spell_name = spells_name_param;
+	
+	IF sql_error = FALSE THEN
+		SELECT CONCAT('Spell , ',spell_name_param, ', successfully deleted from game.') as Message;
+	ELSE
+		SELECT 'Spell deletion was not successful' as Message;
+	END IF;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -708,4 +1015,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-06-20 12:46:46
+-- Dump completed on 2017-06-20 13:13:54
