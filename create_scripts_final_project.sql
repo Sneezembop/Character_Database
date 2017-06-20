@@ -271,63 +271,6 @@ DELIMITER ;
 -- DATA MAPPING SCRIPTS BELOW
 -- -----------------------------------------------
 
-
-
-DROP PROCEDURE IF EXISTS assign_armor_class;
-
-DELIMITER //
-CREATE PROCEDURE assign_armor_class
-(
-	class_name_param VARCHAR(64),
-    armor_name_param VARCHAR(64),
-    quantity_param INT
-)
-/**
- * Procedure to assign armor to a class
- * User Input: Class Name, Armor Name, Armor Quantity
- */
-BEGIN
-	DECLARE sql_error INT DEFAULT FALSE;
-    
-	DECLARE a_id INT;
-    DECLARE class_prof ENUM('light','medium','heavy');
-    DECLARE a_type ENUM('light','medium','heavy');
-    DECLARE c_id INT;
-    
-    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
-    SET sql_error = TRUE;
-    
-    SELECT equipment_id INTO a_id
-    FROM equipment
-    WHERE equipment_name = armor_name_param;
-    
-    SELECT class_id into c_id
-    FROM class
-    WHERE class_name = class_name_param;
-    
-    SELECT armor_proficiency INTO class_prof
-	FROM class
-    WHERE class_id = c_id;
-    
-    SELECT armor_type INTO a_type
-    FROM armor
-    WHERE a_id = equipment_id;
-    
-    IF sql_error = FALSE THEN
-		IF class_prof = a_type THEN
-			INSERT INTO class_equipment_loadout
-			VALUES(c_id,a_id,quantity_param);
-			SELECT('Armor assignment successful') as Message;
-		ELSE 
-			SELECT('Armor assignment failed due to proficiency conflict') as Message;
-		END IF;
-	ELSE
-		SELECT 'Database error on armor assignment' as Message;
-	END IF;
-END //
-DELIMITER ;
-
-
 DROP PROCEDURE IF EXISTS assign_weapon_class;
 DELIMITER //
 CREATE PROCEDURE assign_weapon_class
@@ -375,15 +318,99 @@ BEGIN
     WHERE class_id = c_id;
     
     IF sql_error = FALSE THEN
-		IF class_prof = w_type THEN
-			INSERT INTO class_equipment_loadout
-			VALUES(c_id,w_id,quantity_param);
-			SELECT('Weapon assignment successful') as Message;
-		ELSE 
-			SELECT('Weapon assignment failed due to proficiency conflict') as Message;
-		END IF;
+		CASE
+			WHEN class_prof = 'simple' THEN
+				IF w_type = 'simple' THEN
+					INSERT INTO class_equipment_loadout
+					VALUES(c_id,w_id,quantity_param);
+					SELECT('Weapon assignment successful') as Message;
+				ELSE 
+					SELECT('Weapon assignment failed due to proficiency conflict') as Message;
+				END IF;
+			WHEN class_prof = 'martial' THEN
+				IF w_type = 'exotic' THEN
+					SELECT 'Weapon assignment failed due to proficiency conflict' as Message;
+				ELSE
+					INSERT INTO class_equipment_loadout
+					VALUES(c_id,w_id,quantity_param);
+					SELECT('Weapon assignment successful') as Message;
+				END IF;
+			WHEN class_prof = 'exotic' THEN
+				INSERT INTO class_equipment_loadout
+				VALUES(c_id,w_id,quantity_param);
+				SELECT('Weapon assignment successful') as Message;
+		END CASE;
 	ELSE
 		SELECT 'Database error on weapon assignment' as Message;
+	END IF;
+END //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS assign_armor_class;
+
+DELIMITER //
+CREATE PROCEDURE assign_armor_class
+(
+	class_name_param VARCHAR(64),
+    armor_name_param VARCHAR(64),
+    quantity_param INT
+)
+/**
+ * Procedure to assign armor to a class
+ * User Input: Class Name, Armor Name, Armor Quantity
+ */
+BEGIN
+	DECLARE sql_error INT DEFAULT FALSE;
+    
+	DECLARE a_id INT;
+    DECLARE class_prof ENUM('light','medium','heavy');
+    DECLARE a_type ENUM('light','medium','heavy');
+    DECLARE c_id INT;
+    
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    SET sql_error = TRUE;
+    
+    SELECT equipment_id INTO a_id
+    FROM equipment
+    WHERE equipment_name = armor_name_param;
+    
+    SELECT class_id into c_id
+    FROM class
+    WHERE class_name = class_name_param;
+    
+    SELECT armor_proficiency INTO class_prof
+	FROM class
+    WHERE class_id = c_id;
+    
+    SELECT armor_type INTO a_type
+    FROM armor
+    WHERE a_id = equipment_id;
+    
+    IF sql_error = FALSE THEN
+		CASE
+			WHEN class_prof = 'light' THEN
+				IF a_type = 'light' THEN
+					INSERT INTO class_equipment_loadout
+					VALUES(c_id,a_id,quantity_param);
+					SELECT('Armor assignment successful') as Message;
+				ELSE 
+					SELECT('Armor assignment failed due to proficiency conflict') as Message;
+				END IF;
+			WHEN class_prof = 'medium' THEN
+				IF a_type = 'heavy' THEN
+					SELECT 'Armor assignment failed due to proficiency conflict' as Message;
+				ELSE
+					INSERT INTO class_equipment_loadout
+					VALUES(c_id,a_id,quantity_param);
+					SELECT('Armor assignment successful') as Message;
+				END IF;
+			WHEN class_prof = 'heavy' THEN
+				INSERT INTO class_equipment_loadout
+				VALUES(c_id,a_id,quantity_param);
+				SELECT('Armor assignment successful') as Message;
+		END CASE;
+	ELSE
+		SELECT 'Database error on armor assignment' as Message;
 	END IF;
 END //
 DELIMITER ;

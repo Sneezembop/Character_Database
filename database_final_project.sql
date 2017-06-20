@@ -188,6 +188,7 @@ CREATE TABLE `class_equipment_loadout` (
 
 LOCK TABLES `class_equipment_loadout` WRITE;
 /*!40000 ALTER TABLE `class_equipment_loadout` DISABLE KEYS */;
+INSERT INTO `class_equipment_loadout` VALUES (1,7,1),(1,9,1),(2,1,1),(2,13,1),(3,5,1),(3,11,1);
 /*!40000 ALTER TABLE `class_equipment_loadout` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -488,13 +489,28 @@ BEGIN
     WHERE a_id = equipment_id;
     
     IF sql_error = FALSE THEN
-		IF class_prof = a_type THEN
-			INSERT INTO class_equipment_loadout
-			VALUES(c_id,a_id,quantity_param);
-			SELECT('Armor assignment successful') as Message;
-		ELSE 
-			SELECT('Armor assignment failed due to proficiency conflict') as Message;
-		END IF;
+		CASE
+			WHEN class_prof = 'light' THEN
+				IF a_type = 'light' THEN
+					INSERT INTO class_equipment_loadout
+					VALUES(c_id,a_id,quantity_param);
+					SELECT('Armor assignment successful') as Message;
+				ELSE 
+					SELECT('Armor assignment failed due to proficiency conflict') as Message;
+				END IF;
+			WHEN class_prof = 'medium' THEN
+				IF a_type = 'heavy' THEN
+					SELECT 'Armor assignment failed due to proficiency conflict' as Message;
+				ELSE
+					INSERT INTO class_equipment_loadout
+					VALUES(c_id,a_id,quantity_param);
+					SELECT('Armor assignment successful') as Message;
+				END IF;
+			WHEN class_prof = 'heavy' THEN
+				INSERT INTO class_equipment_loadout
+				VALUES(c_id,a_id,quantity_param);
+				SELECT('Armor assignment successful') as Message;
+		END CASE;
 	ELSE
 		SELECT 'Database error on armor assignment' as Message;
 	END IF;
@@ -689,13 +705,28 @@ BEGIN
     WHERE class_id = c_id;
     
     IF sql_error = FALSE THEN
-		IF class_prof = w_type THEN
-			INSERT INTO class_equipment_loadout
-			VALUES(c_id,w_id,quantity_param);
-			SELECT('Weapon assignment successful') as Message;
-		ELSE 
-			SELECT('Weapon assignment failed due to proficiency conflict') as Message;
-		END IF;
+		CASE
+			WHEN class_prof = 'simple' THEN
+				IF w_type = 'simple' THEN
+					INSERT INTO class_equipment_loadout
+					VALUES(c_id,w_id,quantity_param);
+					SELECT('Weapon assignment successful') as Message;
+				ELSE 
+					SELECT('Weapon assignment failed due to proficiency conflict') as Message;
+				END IF;
+			WHEN class_prof = 'martial' THEN
+				IF w_type = 'exotic' THEN
+					SELECT 'Weapon assignment failed due to proficiency conflict' as Message;
+				ELSE
+					INSERT INTO class_equipment_loadout
+					VALUES(c_id,w_id,quantity_param);
+					SELECT('Weapon assignment successful') as Message;
+				END IF;
+			WHEN class_prof = 'exotic' THEN
+				INSERT INTO class_equipment_loadout
+				VALUES(c_id,w_id,quantity_param);
+				SELECT('Weapon assignment successful') as Message;
+		END CASE;
 	ELSE
 		SELECT 'Database error on weapon assignment' as Message;
 	END IF;
@@ -1301,4 +1332,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-06-20 16:39:00
+-- Dump completed on 2017-06-20 19:33:59
