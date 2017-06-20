@@ -267,6 +267,12 @@ BEGIN
 END //
 DELIMITER ;
 
+
+-- DATA MAPPING SCRIPTS BELOW
+-- -----------------------------------------------
+
+
+
 DROP PROCEDURE IF EXISTS assign_armor_class;
 
 DELIMITER //
@@ -320,6 +326,70 @@ BEGIN
 	END IF;
 END //
 DELIMITER ;
+
+DELIMITER //
+CREATE PROCEDURE assign_weapon_class
+(
+	class_name_param VARCHAR(64),
+    weapon_name_param VARCHAR(64),
+    quantity_param INT,
+    ranged_melee ENUM('ranged','melee')
+)
+/**
+ * Procedure to assign weapon to a class
+ * User Input: Class Name, Weapon Name, Weapon Quantity, Range/Melee
+ */
+BEGIN
+	DECLARE sql_error INT DEFAULT FALSE;
+    
+	DECLARE c_id INT;
+    DECLARE class_prof ENUM('simple','martial','exotic');
+    DECLARE w_type ENUM('simple','martial','exotic');
+    DECLARE w_id INT;
+    
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    SET sql_error = TRUE;
+    
+    SELECT equipment_id INTO w_id
+    FROM equipment
+    WHERE equipment_name = weapon_name_param;
+    
+    SELECT class_id into c_id
+    FROM class
+    WHERE class_name = class_name_param;
+    
+    IF ranged_melee = 'ranged' THEN
+		SELECT weapon_type INTO w_type
+		FROM ranged_weapons
+		WHERE w_id = equipment_id;
+	ELSE
+		SELECT weapon_type INTO w_type
+		FROM melee_weapons
+		WHERE w_id = equipment_id;
+	END IF;
+    
+	SELECT weapon_proficiency INTO class_prof
+	FROM class
+    WHERE class_id = c_id;
+    
+    IF sql_error = FALSE THEN
+		IF class_prof = w_type THEN
+			INSERT INTO class_equipment_loadout
+			VALUES(c_id,w_id,quantity_param);
+			SELECT('Weapon assignment successful') as Message;
+		ELSE 
+			SELECT('Weapon assignment failed due to proficiency conflict') as Message;
+		END IF;
+	ELSE
+		SELECT 'Database error on weapon assignment' as Message;
+	END IF;
+END //
+DELIMITER ;
+
+
+-- DELETE DATA SCRIPTS BELOW:
+
+
     
 /** delete char procedure ***/
 DROP PROCEDURE IF EXISTS delete_character;
@@ -476,6 +546,11 @@ BEGIN
 END //
 
 DELIMITER ;
+
+
+
+-- UPDATE DATA SCRIPTS BELOW
+
 
 
 /** character name change **/
