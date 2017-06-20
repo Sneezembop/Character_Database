@@ -283,13 +283,13 @@ CREATE PROCEDURE assign_armor_class
 BEGIN
 	DECLARE sql_error INT DEFAULT FALSE;
     
-    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
-    SET sql_error = TRUE;
-    
 	DECLARE a_id INT;
     DECLARE class_prof ENUM('light','medium','heavy');
     DECLARE a_type ENUM('light','medium','heavy');
     DECLARE c_id INT;
+    
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    SET sql_error = TRUE;
     
     SELECT equipment_id INTO a_id
     FROM equipment
