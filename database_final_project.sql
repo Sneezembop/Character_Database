@@ -109,16 +109,19 @@ CREATE TABLE `characters` (
   `character_id` int(11) NOT NULL AUTO_INCREMENT,
   `character_name` varchar(24) NOT NULL,
   `class_id` int(11) NOT NULL,
-  `attribute_id` int(11) DEFAULT NULL,
-  `health_points` int(11) DEFAULT NULL,
-  `character_level` int(11) DEFAULT '1',
+  `health_points` int(11) NOT NULL DEFAULT '10',
+  `character_level` int(11) NOT NULL DEFAULT '1',
   `player_id` int(11) NOT NULL,
+  `strength` int(11) NOT NULL DEFAULT '8',
+  `dexterity` int(11) NOT NULL DEFAULT '8',
+  `constitution` int(11) NOT NULL DEFAULT '8',
+  `intelligence` int(11) NOT NULL DEFAULT '8',
+  `wisdom` int(11) NOT NULL DEFAULT '8',
+  `charisma` int(11) NOT NULL DEFAULT '8',
   PRIMARY KEY (`character_id`),
   UNIQUE KEY `character_name_UNIQUE` (`character_name`),
   KEY `class_id_fk_idx` (`class_id`),
-  KEY `attribute_id_fk_idx` (`attribute_id`),
   KEY `player_id_fk_idx` (`player_id`),
-  CONSTRAINT `attribute_id_fk` FOREIGN KEY (`attribute_id`) REFERENCES `attributes` (`attribute_id`) ON UPDATE CASCADE,
   CONSTRAINT `class_id_fk` FOREIGN KEY (`class_id`) REFERENCES `class` (`class_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `player_id_fk` FOREIGN KEY (`player_id`) REFERENCES `players` (`player_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -149,7 +152,7 @@ CREATE TABLE `class` (
   `attribute1` enum('strength','intelligence','dexterity','wisdom','charisma','constitution') DEFAULT NULL,
   `attribute2` enum('strength','intelligence','dexterity','wisdom','charisma','constitution') DEFAULT NULL,
   PRIMARY KEY (`class_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -158,7 +161,7 @@ CREATE TABLE `class` (
 
 LOCK TABLES `class` WRITE;
 /*!40000 ALTER TABLE `class` DISABLE KEYS */;
-INSERT INTO `class` VALUES (1,'Fighter','heavy','exotic','This is a standard fighter class','strength','constitution');
+INSERT INTO `class` VALUES (1,'Fighter','heavy','exotic','This is a standard fighter class','strength','constitution'),(2,'Wizard','light','simple','standard magic user','intelligence','wisdom'),(3,'Cleric','heavy','martial','standard tanky healer','wisdom','strength');
 /*!40000 ALTER TABLE `class` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -257,7 +260,7 @@ CREATE TABLE `equipment` (
   `equipment_description` varchar(140) NOT NULL,
   PRIMARY KEY (`equipment_id`),
   UNIQUE KEY `equipment_name_UNIQUE` (`equipment_name`)
-) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -266,7 +269,7 @@ CREATE TABLE `equipment` (
 
 LOCK TABLES `equipment` WRITE;
 /*!40000 ALTER TABLE `equipment` DISABLE KEYS */;
-INSERT INTO `equipment` VALUES (1,'cloth armor',5,'robes typically worn by magic users'),(2,'heavy cloth armor',7,'sturdier robes for sturdier mages'),(3,'leather armor',10,'standard padded leather armor'),(4,'studded leather armor',13,'reinforced leather armor'),(5,'chain armor',15,'standard issue heavy armor'),(7,'plate armor',20,'beefy big boy armor'),(8,'short sword',2,'this is a short sword'),(9,'iron sword',3,'this is an iron sword'),(10,'steel sword',4,'this is a steel sword'),(11,'light club',3,'this is a light club'),(12,'heavy club',6,'this is a heavy club'),(13,'staff',2,'this is a staff'),(14,'light bow',3,'This is a light bow'),(15,'light crossbow',2,'This is a light crossbow'),(16,'light shield',3,'This is a light shield'),(17,'heavy shield',6,'This is a heavy shield'),(18,'nick armor',24,'nick\'s armor'),(21,'Nick Sword',5,'nick\'s sword is awesome'),(23,'stone',0,'This is a projectile used with slings'),(24,'sling',1,'this is a simple sling');
+INSERT INTO `equipment` VALUES (1,'cloth armor',5,'robes typically worn by magic users'),(2,'heavy cloth armor',7,'sturdier robes for sturdier mages'),(3,'leather armor',10,'standard padded leather armor'),(4,'studded leather armor',13,'reinforced leather armor'),(5,'chain armor',15,'standard issue heavy armor'),(7,'plate armor',20,'beefy big boy armor'),(8,'short sword',2,'this is a short sword'),(9,'iron sword',3,'this is an iron sword'),(10,'steel sword',4,'this is a steel sword'),(11,'light club',3,'this is a light club'),(12,'heavy club',6,'this is a heavy club'),(13,'staff',2,'this is a staff'),(14,'light bow',3,'This is a light bow'),(15,'light crossbow',2,'This is a light crossbow'),(16,'light shield',3,'This is a light shield'),(17,'heavy shield',6,'This is a heavy shield'),(18,'nick armor',24,'nick\'s armor'),(21,'Nick Sword',5,'nick\'s sword is awesome'),(23,'stone',0,'This is a projectile used with slings'),(24,'sling',1,'this is a simple sling'),(25,'arrow',0,'this is an arrow for a bow'),(26,'bolt',0,'this is a bolt for a crossbow');
 /*!40000 ALTER TABLE `equipment` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -308,11 +311,11 @@ DROP TABLE IF EXISTS `players`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `players` (
   `player_id` int(11) NOT NULL AUTO_INCREMENT,
-  `player_email` varchar(45) NOT NULL,
+  `player_email` varchar(64) NOT NULL,
   `player_fname` varchar(64) NOT NULL,
   `player_lname` varchar(64) NOT NULL,
   PRIMARY KEY (`player_id`,`player_email`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -321,6 +324,7 @@ CREATE TABLE `players` (
 
 LOCK TABLES `players` WRITE;
 /*!40000 ALTER TABLE `players` DISABLE KEYS */;
+INSERT INTO `players` VALUES (1,'test_user@thebestgame.com','Test','User');
 /*!40000 ALTER TABLE `players` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -352,7 +356,7 @@ CREATE TABLE `ranged_weapons` (
 
 LOCK TABLES `ranged_weapons` WRITE;
 /*!40000 ALTER TABLE `ranged_weapons` DISABLE KEYS */;
-INSERT INTO `ranged_weapons` VALUES (24,1,1,20,'simple',23,'dexterity');
+INSERT INTO `ranged_weapons` VALUES (14,2,2,30,'martial',25,'dexterity'),(15,3,1,30,'martial',26,'dexterity'),(24,1,1,20,'simple',23,'dexterity');
 /*!40000 ALTER TABLE `ranged_weapons` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -370,7 +374,7 @@ CREATE TABLE `skills` (
   `attribute` enum('strength','dexterity','intelligence','wisdom','charisma','constitution') NOT NULL,
   PRIMARY KEY (`skill_id`),
   UNIQUE KEY `skill_name_UNIQUE` (`skill_name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -379,6 +383,7 @@ CREATE TABLE `skills` (
 
 LOCK TABLES `skills` WRITE;
 /*!40000 ALTER TABLE `skills` DISABLE KEYS */;
+INSERT INTO `skills` VALUES (1,'Cleave','Next attack hits 2 enemies','strength'),(2,'Charge','Character attempts to rush and stun enemy, roll 17 or above to hit','strength'),(3,'First Aid','Character heals for 1 damage, only usable once per day','intelligence'),(4,'Detect Magic','Character attempts to detect magic source, roll check','intelligence'),(5,'Disarm Trap','Character attempts to disarm trap','dexterity'),(6,'Perception','Character attempts to spot things in room','wisdom'),(7,'Persuade','Character attempts to coerce other character/npc, charisma save','charisma');
 /*!40000 ALTER TABLE `skills` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -399,7 +404,7 @@ CREATE TABLE `spells` (
   `attribute` enum('intelligence','wisdom','charisma') NOT NULL,
   PRIMARY KEY (`spell_id`),
   UNIQUE KEY `spell_name_UNIQUE` (`spell_name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -408,6 +413,7 @@ CREATE TABLE `spells` (
 
 LOCK TABLES `spells` WRITE;
 /*!40000 ALTER TABLE `spells` DISABLE KEYS */;
+INSERT INTO `spells` VALUES (1,'Heal I','This spell is a basic heal',0,1,'1','wisdom'),(2,'Heal II','This is a less basic heal',0,2,'2','wisdom'),(3,'Fire I','This is a basic fire damage spell',1,0,'1','intelligence'),(4,'Fire II','This is a less basic fire damage spell',2,0,'2','intelligence'),(5,'Magic Missile','Every mage should know this',3,0,'1','intelligence');
 /*!40000 ALTER TABLE `spells` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -446,6 +452,32 @@ BEGIN
 			ROLLBACK;
             SELECT 'Armor not successfully added to game' as Message;
 		END IF;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `create_character` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `create_character`(
+    character_name_param	VARCHAR(24),
+    class_name_param	VARCHAR(64),
+    player_email_param VARCHAR(24)
+)
+BEGIN
+	INSERT INTO characters(character_name, class_id, player_id)
+    VALUES (character_name_param, 
+		(SELECT class_id FROM class WHERE class_name = class_name_param), 
+        (SELECT player_id FROM players WHERE player_email = player_email_param));
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -537,7 +569,11 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `create_new_skill`(s_name VARCHAR(64), s_desc VARCHAR(140), s_attribute  ENUM('strength','intelligence','dexterity','wisdom','charisma','constitution'))
+CREATE DEFINER=`root`@`localhost` PROCEDURE `create_new_skill`(
+	s_name VARCHAR(64), 
+    s_desc VARCHAR(140), 
+    s_attribute  ENUM('strength','intelligence','dexterity','wisdom','charisma','constitution')
+)
 BEGIN
 	DECLARE sql_error INT DEFAULT FALSE;
     
@@ -546,7 +582,7 @@ BEGIN
     
     START TRANSACTION;
     
-    INSERT INTO skills(skill_name,skill_description,skill_attribute)
+    INSERT INTO skills(skill_name,skill_description,attribute)
         VALUES (s_name,s_desc,s_attribute);
         
         IF sql_error = FALSE THEN
@@ -592,6 +628,30 @@ BEGIN
 			ROLLBACK;
             SELECT 'Spell not successfully added to game' as Message;
 		END IF;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `create_player` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `create_player`(
+    email_param	VARCHAR(64),
+    fname_param	VARCHAR(64),
+    lname_param	VARCHAR(64)
+)
+BEGIN
+	INSERT INTO players (player_email, player_fname, player_lname)
+    VALUES (email_param, fname_param, lname_param);
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -648,4 +708,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-06-19 19:46:44
+-- Dump completed on 2017-06-20 12:46:46

@@ -222,9 +222,9 @@ DROP PROCEDURE IF EXISTS create_player;
 DELIMITER //
 CREATE PROCEDURE create_player
 (
-    email_param	VARCHAR(24),
-    fname_param	VARCHAR(24),
-    lname_param	VARCHAR(24)
+    email_param	VARCHAR(64),
+    fname_param	VARCHAR(64),
+    lname_param	VARCHAR(64)
 )
 /**
  * Procedure to create new player
