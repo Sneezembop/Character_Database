@@ -818,7 +818,7 @@ BEGIN
                     WHEN primary1 = 'constitution' THEN
 						UPDATE characters
 						SET constitution = constitution + 1;
-				END CASE
+				END CASE;
                 CASE 
 					WHEN primary2 = 'strength' THEN
 						UPDATE characters
@@ -877,6 +877,20 @@ CREATE PROCEDURE read_all_players()
 BEGIN        
 	SELECT *
 	FROM players;
+END //
+
+DELIMITER ;
+
+/** read all characters**/
+DROP PROCEDURE IF EXISTS read_all_characters;
+DELIMITER //
+CREATE PROCEDURE read_all_characters
+(
+	player_email_param	VARCHAR(64)
+)
+BEGIN        
+	SELECT character_name
+	FROM characters, players WHERE players.player_id = characters.player_id AND players.player_email = player_email_param;
 END //
 
 DELIMITER ;

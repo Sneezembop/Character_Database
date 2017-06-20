@@ -33,14 +33,25 @@ connection.query('SELECT * FROM planets WHERE planets.affiliation = \'rebels\'',
 function quit() {
     prompt.stop();
     connection.end();
+    process.stdout.write('\033c');
+    console.log("PROGRAM ENDED");
 }
 
 function main() {
     connection.connect();
     prompt.start();
 
+
     // load('Axiom Verge Soundtrack - Trace Awakens.mp3').then(play);
 
+    refreshView();
+    console.log("PLEASE LOG IN");
+
+    getUserInput(['userEmail', 'password'], processLogin);
+
+}
+function refreshView(){
+    process.stdout.write('\033c');
     console.log("WELCOME TO THE RPG CHARACTER DATABASE SYSTEM");
     console.log("                                 .       .                              ");
     console.log("                                / `.   .' \\                             ");
@@ -56,10 +67,6 @@ function main() {
     console.log("                   ~-.__|      /_ - ~ ^|      /- _      `..-'   f: f:   ");
     console.log("                        |     /        |     /     ~-.     `-. _||_||_  ");
     console.log("                        |_____|        |_____|         ~ - . _ _ _ _ _> ");
-    console.log("PLEASE LOG IN");
-
-    getUserInput(['userEmail', 'password'], processLogin);
-
 }
 
 function getUserInput(params, callback) {
@@ -85,6 +92,7 @@ function processLogin(input) {
         } else {
             playerID = results[0].player_id;
             playerEmail = results[0].player_email;
+            refreshView();
             console.log("WELCOME " + results[0].player_fname + "! PLEASE ENTER A COMMAND.");
             getUserInput(mainMenuParams, processMainMenu);
         }
@@ -92,6 +100,7 @@ function processLogin(input) {
 }
 
 function processCreatePlayerQuestion(input) {
+    refreshView();
     if (input.YorN == 'Y') {
         console.log("PLEASE ENTER THE FOLLOWING INFO:");
         getUserInput(['email', 'firstName', 'lastName', 'password'], processCreatePlayer);
@@ -106,14 +115,16 @@ function processCreatePlayer(input) {
 
     connection.query('CALL create_player(\'' + input.email + '\', \'' + input.firstName + '\', \'' + input.lastName + '\')', function (error, results, fields) {
         if (error) throw error;
+        refreshView();
         console.log("PLAYER CREATED, PLEASE LOG IN");
         getUserInput(['userEmail', 'password'], processLogin);
     });
 }
 
-function processCreateCharacter(input){
+function processCreateCharacter(input) {
     connection.query('CALL create_character(\'' + input.characterName + '\', \'' + input.characterClass + '\', \'' + playerEmail + '\')', function (error, results, fields) {
         if (error) throw error;
+        refreshView();
         console.log("CHARACTER CREATED!");
         getUserInput(mainMenuParams, processMainMenu);
     });
@@ -124,9 +135,10 @@ function processCreateCharacter(input){
 var ValidMainCommands = ['CREATE', 'DELETE', 'UPDATE', 'VIEW', 'QUIT', 'HELP'];
 
 function processMainMenu(input) {
+    refreshView();
     switch (input.Command) {
         case 'CREATE':
-            getUserInput(['characterName','characterClass'],processCreateCharacter);
+            getUserInput(['characterName', 'characterClass'], processCreateCharacter);
             break;
         case 'DELETE':
             quit();
@@ -135,7 +147,8 @@ function processMainMenu(input) {
             quit();
             break;
         case 'VIEW':
-            quit();
+            displayViewMenu();
+            //getUserInput(['characterName'], processView);
             break;
         case 'QUIT':
             quit();
@@ -153,15 +166,36 @@ function processMainMenu(input) {
 
 }
 
-function displayHelpMenu(){
+function processView(input) {
+        connection.query('CALL read_character_detail(\'' +  input.characterName + '\')', function (error, results, fields) {
+        if (error) throw error;
+        refreshView();
+        console.log("CHARACTER DATA:");
+        console.log(results[0]);
+        getUserInput(mainMenuParams, processMainMenu);
+    });
 
-            console.log("HELP LIST:");
-            console.log("\t-\t-\t-\tMAIN MENU COMMANDS\t-\t-\t-");
-            console.log("COMMAND\t-\t-VALUE");
-            console.log("CREATE\t-\t[character name]\t-\tcreates a new character with the inputed name. (NOT FINISHED)");
-            console.log("VIEW\t-\t[character name]\t-\tshows the stats of the character. (NOT FINISHED)");
-            console.log("UPDATE\t-\t[character name]\t-\tallows players to update their characters. (NOT FINISHED)");
-            console.log("DELETE\t-\t[character name]\t-\tdeletes character from the system. (NOT FINISHED)");
-            console.log("HELP\t-\t[none]\t-\tshows the help menu.");
-            console.log("QUIT\t-\t[none]\t-\texits the program.");
-};
+}
+
+function displayViewMenu() {
+    connection.query('CALL read_all_characters(\'' +  playerEmail + '\')', function (error, results, fields) {
+        if (error) throw error;
+
+        console.log(results[0]);
+        console.log("VIEW WHICH CHARACTER?");
+        getUserInput(['characterName'], processView);
+    });
+
+}
+
+function displayHelpMenu() {
+
+    console.log("HELP LIST:");
+    console.log("\t-\t-\t-\tMAIN MENU COMMANDS\t-\t-\t-");
+    console.log("CREATE\t-\tcreates a new character.");
+    console.log("VIEW\t-\tshows the stats of the character.");
+    console.log("UPDATE\t-\tallows players to update their characters. (NOT FINISHED)");
+    console.log("DELETE\t-\tdeletes character from the system. (NOT FINISHED)");
+    console.log("HELP\t-\tshows the help menu.");
+    console.log("QUIT\t-\texits the program.");
+}
