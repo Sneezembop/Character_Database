@@ -123,7 +123,7 @@ CREATE TABLE `characters` (
   KEY `player_id_fk_idx` (`player_id`),
   CONSTRAINT `class_id_fk` FOREIGN KEY (`class_id`) REFERENCES `class` (`class_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `player_id_fk` FOREIGN KEY (`player_id`) REFERENCES `players` (`player_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -134,6 +134,27 @@ LOCK TABLES `characters` WRITE;
 /*!40000 ALTER TABLE `characters` DISABLE KEYS */;
 /*!40000 ALTER TABLE `characters` ENABLE KEYS */;
 UNLOCK TABLES;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER create_health_points
+	AFTER INSERT ON characters
+    FOR EACH ROW
+BEGIN
+    INSERT INTO health_points
+    VALUES (NEW.character_id,5 + NEW.constitution,5 + NEW.constitution);
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
 -- Table structure for table `class`
@@ -216,6 +237,7 @@ CREATE TABLE `class_skills` (
 
 LOCK TABLES `class_skills` WRITE;
 /*!40000 ALTER TABLE `class_skills` DISABLE KEYS */;
+INSERT INTO `class_skills` VALUES (1,1,1),(1,2,1),(2,4,1),(3,6,1);
 /*!40000 ALTER TABLE `class_skills` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -243,6 +265,7 @@ CREATE TABLE `class_spells` (
 
 LOCK TABLES `class_spells` WRITE;
 /*!40000 ALTER TABLE `class_spells` DISABLE KEYS */;
+INSERT INTO `class_spells` VALUES (2,1,3),(2,2,8),(2,3,1),(2,4,6),(2,5,5),(3,1,1),(3,2,3);
 /*!40000 ALTER TABLE `class_spells` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -297,6 +320,53 @@ LOCK TABLES `health_points` WRITE;
 /*!40000 ALTER TABLE `health_points` DISABLE KEYS */;
 /*!40000 ALTER TABLE `health_points` ENABLE KEYS */;
 UNLOCK TABLES;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER get_starter_equip
+	AFTER INSERT ON health_points
+    FOR EACH ROW
+BEGIN
+    INSERT INTO character_equipment
+    SELECT c.character_id, equipment_id, quantity
+    FROM class_equipment_loadout JOIN class join characters c
+    ON class.class_id = class_equipment_loadout.class_id
+    AND c.class_id = class.class_id
+    WHERE class.class_id = (SELECT class_id FROM characters WHERE character_id = NEW.character_id);
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER health_point_update
+	BEFORE UPDATE ON health_points
+    FOR EACH ROW
+BEGIN
+	IF NEW.current_health_points > NEW.total_health_points THEN
+		SET NEW.current_health_points = NEW.total_health_points;
+	END IF;
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
 -- Table structure for table `melee_weapons`
@@ -444,8 +514,74 @@ INSERT INTO `spells` VALUES (1,'Heal I','This spell is a basic heal',0,1,'1','wi
 UNLOCK TABLES;
 
 --
+-- Dumping events for database 'mydb'
+--
+/*!50106 SET @save_time_zone= @@TIME_ZONE */ ;
+/*!50106 DROP EVENT IF EXISTS `increase_health_event` */;
+DELIMITER ;;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;;
+/*!50003 SET character_set_client  = utf8 */ ;;
+/*!50003 SET character_set_results = utf8 */ ;;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;;
+/*!50003 SET @saved_time_zone      = @@time_zone */ ;;
+/*!50003 SET time_zone             = 'SYSTEM' */ ;;
+/*!50106 CREATE*/ /*!50117 DEFINER=`root`@`localhost`*/ /*!50106 EVENT `increase_health_event` ON SCHEDULE EVERY 30 SECOND STARTS '2017-06-20 23:33:46' ON COMPLETION NOT PRESERVE ENABLE DO BEGIN
+    UPDATE health_points
+    SET health_points = health_points + 1;
+END */ ;;
+/*!50003 SET time_zone             = @saved_time_zone */ ;;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;;
+/*!50003 SET character_set_results = @saved_cs_results */ ;;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;;
+DELIMITER ;
+/*!50106 SET TIME_ZONE= @save_time_zone */ ;
+
+--
 -- Dumping routines for database 'mydb'
 --
+/*!50003 DROP FUNCTION IF EXISTS `calculate_attribute_value` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` FUNCTION `calculate_attribute_value`(
+	c_id INT,
+    attribute ENUM('strength','dexterity','constitution','intelligence','wisdom','charisma'),
+    char_level INT
+) RETURNS int(11)
+BEGIN
+	DECLARE class_attrb1 ENUM('strength','dexterity','constitution','intelligence','wisdom','charisma');
+    DECLARE class_attrb2 ENUM('strength','dexterity','constitution','intelligence','wisdom','charisma');
+    
+    SELECT attribute1 INTO class_attrb1
+    FROM class
+    WHERE class_id = c_id;
+    
+    SELECT attribute2 INTO class_attrb2
+    FROM class
+    WHERE class_id = c_id;
+    
+    IF attribute = class_attrb1 OR attribute = class_attrb2 THEN
+		RETURN 8 + char_level / 1;
+	ELSE
+		RETURN 8 + char_level / 2 - 1;
+	END IF;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!50003 DROP PROCEDURE IF EXISTS `assign_armor_class` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -773,6 +909,73 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `character_level_up` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `character_level_up`(
+	character_name_param VARCHAR(64)
+)
+BEGIN
+	DECLARE sql_error INT DEFAULT FALSE;
+    DECLARE c_id INT;
+    DECLARE char_id INT;
+    DECLARE new_level INT;
+    DECLARE constitution_score INT;
+    
+    
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    SET sql_error = TRUE;
+    
+    START TRANSACTION;
+		SELECT class_id INTO c_id
+        FROM characters
+        WHERE character_name_param = characters.character_name;
+        
+        SELECT character_id INTO char_id
+        FROM characters
+        WHERE character_name_param = characters.character_name;
+        
+        SELECT character_level + 1 INTO new_level
+        FROM characters
+        WHERE char_id = characters.character_id;
+        
+        SELECT  calculate_attribute_value(c_id,'constitution',new_level) INTO constitution_score;
+    
+		UPDATE characters
+        SET character_level = new_level, 
+			strength =  calculate_attribute_value(c_id,'strength',new_level),
+			dexterity = calculate_attribute_value(c_id,'dexterity',new_level),
+            constitution = constitution_score,
+            intelligence =  calculate_attribute_value(c_id,'intelligence',new_level),
+            wisdom =  calculate_attribute_value(c_id,'wisdom',new_level),
+            charisma =  calculate_attribute_value(c_id,'charisma',new_level)
+        WHERE char_id = characters.character_id;
+        
+        UPDATE health_points
+        SET total_health_points = total_health_points + constitution_score,
+			current_health_points = current_health_points + constitution_score
+		WHERE char_id = health_points.character_id;
+	
+    IF sql_error = FALSE THEN
+		COMMIT;
+		SELECT 'Character successfully updated.' as Message;
+	ELSE
+		ROLLBACK;
+		SELECT 'Character not successfully updated.' as Message;
+	END IF;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!50003 DROP PROCEDURE IF EXISTS `create_armor` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -828,25 +1031,40 @@ DELIMITER ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `create_character`(
-    character_name_param	VARCHAR(24),
+    character_name_param	VARCHAR(64),
     class_name_param	VARCHAR(64),
-    player_email_param VARCHAR(24)
+    player_email_param VARCHAR(64)
 )
 BEGIN
 	DECLARE sql_error INT DEFAULT FALSE;
+    DECLARE c_id INT;
+    
     
     DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
     SET sql_error = TRUE;
     
-	INSERT INTO characters(character_name, class_id, player_id)
-    VALUES (character_name_param, 
-		(SELECT class_id FROM class WHERE class_name = class_name_param), 
-        (SELECT player_id FROM players WHERE player_email = player_email_param));
+    START TRANSACTION;
+		SELECT class_id INTO c_id
+        FROM class
+        WHERE class_name = class_name_param;
+    
+		INSERT INTO characters(character_name, class_id, player_id,strength,dexterity,constitution,intelligence,wisdom,charisma)
+		VALUES (character_name_param, 
+			c_id, 
+			(SELECT player_id FROM players WHERE player_email = player_email_param),
+			calculate_attribute_value(c_id,'strength',1),
+			calculate_attribute_value(c_id,'dexterity',1),
+            calculate_attribute_value(c_id,'constitution',1),
+            calculate_attribute_value(c_id,'intelligence',1),
+            calculate_attribute_value(c_id,'wisdom',1),
+            calculate_attribute_value(c_id,'charisma',1));
 	
-	IF sql_error = FALSE THEN
-		SELECT CONCAT('Character, ',character_name_param, ', successfully added to game.') as Message;
+    IF sql_error = FALSE THEN
+		COMMIT;
+		SELECT 'Character successfully created.' as Message;
 	ELSE
-		SELECT 'Character not successfully added to game' as Message;
+		ROLLBACK;
+		SELECT 'Character not successfully created.' as Message;
 	END IF;
 END ;;
 DELIMITER ;
@@ -1286,6 +1504,130 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `new_char_stats` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `new_char_stats`(
+	character_name_param VARCHAR(64),
+    class_id_param INT
+)
+BEGIN
+	DECLARE sql_error INT DEFAULT FALSE;
+    DECLARE prim_attrb1 ENUM('strength','dexterity','constitution','intelligence','wisdom','charisma');
+    DECLARE prim_attrb2 ENUM('strength','dexterity','constitution','intelligence','wisdom','charisma');
+    DECLARE char_id INT;
+    DECLARE char_cons INT;
+    
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    SET sql_error = TRUE;
+    
+    SELECT character_id into char_id
+	FROM characters
+	WHERE character_name = character_name_param;
+        
+	SELECT attribute1 into prim_attrb1
+	FROM class
+	WHERE class_id = class_id_param;
+        
+	SELECT attribute2 into prim_attrb2
+	FROM class
+	WHERE class_id = class_id_param;
+        
+    
+	START TRANSACTION;
+        CASE
+			WHEN prim_attrb1 = 'strength' THEN
+				UPDATE characters c
+                SET c.strength = 1
+                WHERE char_id = character_id;
+                
+			WHEN prim_attrb1 = 'dexterity' THEN
+				UPDATE characters c
+                SET c.dexterity = 1
+                WHERE char_id = character_id;
+                
+			WHEN prim_attrb1 = 'constitution' THEN
+				UPDATE characters c
+                SET c.constitution = 1
+                WHERE char_id = character_id;
+                
+			WHEN prim_attrb1 = 'intelligence' THEN
+				UPDATE characters c
+                SET c.intelligence = 1
+                WHERE char_id = character_id;
+                
+			WHEN prim_attrb1 = 'wisdom' THEN
+				UPDATE characters c
+                SET c.wisdom = 1
+                WHERE char_id = character_id;
+                
+			WHEN prim_attrb1 = 'charisma' THEN
+				UPDATE characters c
+                SET c.charisma = 1
+                WHERE char_id = character_id;
+                
+		END CASE;
+        
+        CASE
+			WHEN prim_attrb2 = 'strength' THEN
+				UPDATE characters c
+                SET c.strength = 1
+                WHERE char_id = character_id;
+                
+			WHEN prim_attrb2 = 'dexterity' THEN
+				UPDATE characters c
+                SET c.dexterity = 1
+                WHERE char_id = character_id;
+                
+			WHEN prim_attrb2 = 'constitution' THEN
+				UPDATE characters c
+                SET c.constitution = 1
+                WHERE char_id = character_id;
+                
+			WHEN prim_attrb2 = 'intelligence' THEN
+				UPDATE characters c
+                SET c.intelligence = 1
+                WHERE char_id = character_id;
+                
+			WHEN prim_attrb2 = 'wisdom' THEN
+				UPDATE characters c
+                SET c.wisdom = 1
+                WHERE char_id = character_id;
+                
+			WHEN prim_attrb2 = 'charisma' THEN
+				UPDATE characters c
+                SET c.charisma = 1
+                WHERE char_id = character_id;
+                
+		END CASE;
+		
+        SELECT constitution INTO char_cons
+        FROM characters
+        WHERE char_id = character_id;
+        
+        INSERT INTO health_points
+        VALUES (char_id, (SELECT SUM(char_cons + 5)), (SELECT SUM(char_cons + 5)));
+    
+		IF sql_error = FALSE THEN
+			COMMIT;
+			SELECT CONCAT('Character, ',character_name_param, ', successfully create and adjusted for level 1.') as Message;
+		ELSE
+			ROLLBACK;
+			SELECT 'Character not successfully created.' as Message;
+		END IF;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!50003 DROP PROCEDURE IF EXISTS `player_email_change` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -1332,4 +1674,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-06-20 19:44:09
+-- Dump completed on 2017-06-21  0:06:07
