@@ -15,6 +15,8 @@ var connection = mysql.createConnection({
 
 var prompt = require('prompt');
 
+
+
 // GLOBALS
 var playerID = 0;
 var playerEmail = "";
@@ -42,7 +44,6 @@ function main() {
     prompt.start();
 
 
-    // load('Axiom Verge Soundtrack - Trace Awakens.mp3').then(play);
 
     refreshView();
     console.log("PLEASE LOG IN");
@@ -50,7 +51,7 @@ function main() {
     getUserInput(['userEmail', 'password'], processLogin);
 
 }
-function refreshView(){
+function refreshView() {
     process.stdout.write('\033c');
     console.log("WELCOME TO THE RPG CHARACTER DATABASE SYSTEM");
     console.log("                                 .       .                              ");
@@ -167,18 +168,60 @@ function processMainMenu(input) {
 }
 
 function processView(input) {
-        connection.query('CALL read_character_detail(\'' +  input.characterName + '\')', function (error, results, fields) {
+
+    connection.query('SELECT character_id FROM characters WHERE character_name = \'' + input.characterName + '\';', function (error, results, fields) {
         if (error) throw error;
-        refreshView();
-        console.log("CHARACTER DATA:");
-        console.log(results[0]);
-        getUserInput(mainMenuParams, processMainMenu);
+        var CharacterID = results[0].character_id;
+        //console.log("CHAR NAME:");
+        //console.log(results[0].character_id);
+        connection.query('CALL read_basic_char_info(\'' + CharacterID + '\')', function (error, results, fields) {
+            if (error) throw error;
+            refreshView();
+            displayBasicCharInfo(results[0]);
+            connection.query('CALL read_equipment_detail(\'' + CharacterID + '\')', function (error, results, fields) {
+                if (error) throw error;
+                displayCharEquipInfo(results[0]);
+                connection.query('CALL read_skills_detail(\'' + CharacterID + '\')', function (error, results, fields) {
+                    if (error) throw error;
+                    displayCharSkillsInfo(results[0]);
+                    connection.query('CALL read_spells_detail(\'' + CharacterID + '\')', function (error, results, fields) {
+                        if (error) throw error;
+                        displayCharSpellssInfo(results[0]);
+                        getUserInput(mainMenuParams, processMainMenu);
+
+                    });
+
+                });
+
+            });
+        });
     });
+
 
 }
 
+function displayBasicCharInfo(info) {
+    console.log("##########################################################");
+    console.log("CHARACTER NAME: " + info[0].character_name + "\t\tLEVEL: " + info[0].character_level + "\t\tCLASS: " + info[0].class_name + "\t\tHP: " + 0 + "/" + 0);
+    console.log("##########################################################");
+}
+
+function displayDetailCharInfo(info) {
+    console.log(info);
+}
+
+function displayCharEquipInfo(info) {
+    console.log(info);
+}
+function displayCharSkillsInfo(info) {
+    console.log(info);
+}
+function displayCharSpellsInfo(info) {
+    console.log(info);
+}
+
 function displayViewMenu() {
-    connection.query('CALL read_all_characters(\'' +  playerEmail + '\')', function (error, results, fields) {
+    connection.query('CALL read_all_characters(\'' + playerEmail + '\')', function (error, results, fields) {
         if (error) throw error;
 
         console.log(results[0]);
