@@ -525,9 +525,8 @@ CREATE PROCEDURE read_equipment_detail
 )
 BEGIN        
 	SELECT *
-	FROM character_equipment ce join equipment e join armor a
+	FROM character_equipment ce join equipment e 
 		ON ce.equip_id = e.equipment_id
-        and e.equipment_id = a.equipment_id
     WHERE ce.char_id = char_id_param;
 END //
 
