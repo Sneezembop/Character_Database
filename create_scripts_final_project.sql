@@ -459,11 +459,6 @@ END //
 
 DELIMITER ;
 
-
-
-
-
-
 /** read all players**/
 DROP PROCEDURE IF EXISTS read_all_players;
 DELIMITER //
