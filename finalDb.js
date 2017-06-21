@@ -173,25 +173,36 @@ function processUpdate(input) {
             levelup(input.characterName);
             break;
         case 'RENAME':
-            console.log("RENAMED " + input.characterName);
+            console.log("RENAME AVAILABLE IN FULL PRODUCT");
             getUserInput(mainMenuParams, processMainMenu);
             break;
         case 'CLASS':
             classChange(input.characterName);
             break;
         case 'HEALTH':
-            console.log("HEALTH CHANGE" + input.characterName);
-            getUserInput(mainMenuParams, processMainMenu);
+            healthChange(input.characterName);
             break;
         case 'BACK':
             backToMainMenu();
             break;
         default:
-            console.log("INVALID FUNCTION TRY AGAIN, BACK TO GO BACK.");
+            console.log("INVALID FUNCTION, SENDING BACK TO MENU.");
             getUserInput(mainMenuParams, processMainMenu);
     }
 
 
+}
+
+function healthChange(characterName){
+    getUserInput(['healthVal'], function (input) {
+        var myquery = 'CALL update_health(\'' + characterName + '\', \'down\', \'' + input.healthVal + '\');'
+        console.log(myquery);
+        connection.query(myquery, function (error, results, fields) {
+            console.log(results);
+            getUserInput(mainMenuParams, processMainMenu);
+        });
+
+    });
 }
 
 function levelup(characterName) {
@@ -405,15 +416,15 @@ function displayHelpMenu() {
     console.log("HELP LIST:");
     console.log("\t-\t-\t-\tMAIN MENU COMMANDS\t-\t-\t-");
     console.log("CREATE\t-\tcreates a new character.");
-    console.log("VIEW\t-\tshows the stats of the character. (MOSTLY FINISHED)");
-    console.log("UPDATE\t-\tallows players to update their characters. (NOT FINISHED)");
+    console.log("VIEW\t-\tshows the stats of the character.");
+    console.log("UPDATE\t-\tallows players to update their characters. (MOSTLY FINISHED)");
     console.log("DELETE\t-\tdeletes character from the system.");
     console.log("HELP\t-\tshows the help menu.");
     console.log("QUIT\t-\texits the program.");
     console.log("\r\t-\t-\t-\tUPDATE COMMANDS\t-\t-\t-");
     console.log("LEVELUP\t-\tlevels up a character.");
-    console.log("RENAME\t-\trenames a character. (MOSTLY FINISHED)");
-    console.log("CLASS\t-\tchanges the character's class. (NOT FINISHED)");
-    console.log("HEALTH\t-\tsets the character's current health");
+    console.log("RENAME\t-\trenames a character. (NOT FINISHED)");
+    console.log("CLASS\t-\tchanges the character's class. ");
+    console.log("HEALTH\t-\tsets the character's current health. (NOT FINISHED)");
     console.log("BACK\t-\tgoes back to main menu");
 }
