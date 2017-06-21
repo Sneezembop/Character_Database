@@ -18,7 +18,7 @@ CREATE TRIGGER leveled_up
   FOR EACH ROW  
   
 BEGIN
-	call update_attributes_level_up();
+	call update_attributes_level_up(old.character_id, old.character_level, new.character_level);
 END//
         
 DELIMITER ;
@@ -27,11 +27,14 @@ DELIMITER ;
 /** update procedures procedure helper**/
 DROP PROCEDURE IF EXISTS update_attributes_level_up;
 DELIMITER //
-CREATE PROCEDURE update_attributes_level_up()
+CREATE PROCEDURE update_attributes_level_up
+(
+	char_id INT, 
+	old_level INT, 
+	new_level INT
+)
 BEGIN        
 	DECLARE sql_error INT DEFAULT FALSE;
-    DECLARE old_level INT;
-    DECLARE new_level INT;
     DECLARE primary1 VARCHAR(64);
     DECLARE primary2 VARCHAR(64);
     DECLARE character_cons_mod INT;
@@ -44,18 +47,6 @@ BEGIN
     
     
     IF new_level > old_level THEN
-    
-    SELECT OLD.character_id
-    INTO char_id
-    FROM characters;
-    
-    SELECT OLD.character_level
-    INTO old_level
-    FROM characters;
-    
-    SELECT NEW.character_level
-    INTO new_level
-    FROM characters;
     
     SELECT cl.attribute1
     INTO primary1
