@@ -582,7 +582,7 @@ BEGIN
 	FROM characters c join class cl join health_points h
 		on c.class_id = cl.class_id
         AND c.character_id = h.character_id
-    WHERE character_id = char_id_param;
+    WHERE c.character_id = char_id_param;
 END //
 
 DELIMITER ;
