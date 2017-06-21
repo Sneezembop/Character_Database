@@ -176,7 +176,7 @@ function processView(input) {
                     displayCharSkillsInfo(results[0]);
                     connection.query('CALL read_spells_detail(\'' + CharacterID + '\')', function (error, results, fields) {
                         if (error) throw error;
-                        displayCharSpellssInfo(results[0]);
+                        displayCharSpellsInfo(results[0]);
                         getUserInput(mainMenuParams, processMainMenu);
 
                     });

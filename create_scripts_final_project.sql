@@ -695,7 +695,7 @@ BEGIN
 	FROM class_spells cs join spells join characters c
 		ON cs.spell_id = spells.spell_id
         AND c.class_id = cs.class_id
-    WHERE c.char_id = char_id_param;
+    WHERE c.character_id = char_id_param;
 END //
 
 DELIMITER ;
@@ -713,7 +713,7 @@ BEGIN
 	FROM class_skills cs join skills join characters c
 		ON cs.skill_id = skills.skill_id
         AND c.class_id = cs.class_id
-    WHERE c.char_id = char_id_param;
+    WHERE c.character_id = char_id_param;
 END //
 
 DELIMITER ;
@@ -726,7 +726,7 @@ CREATE PROCEDURE read_basic_char_info
 	char_id_param	INT
 )
 BEGIN        
-	SELECT c.character_name, c.health_points, c.character_level, cl.class_name
+	SELECT c.character_name, c.character_level, cl.class_name
 	FROM characters c join class cl
 		on c.class_id = cl.class_id
     WHERE character_id = char_id_param;
