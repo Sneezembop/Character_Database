@@ -119,6 +119,7 @@ function processCreateCharacter(input) {
     connection.query('CALL create_character(\'' + input.characterName + '\', \'' + input.characterClass + '\', \'' + playerEmail + '\')', function (error, results, fields) {
         if (error) throw error;
         refreshView();
+        console.log(results);
         console.log("CHARACTER CREATED!");
         getUserInput(mainMenuParams, processMainMenu);
     });
@@ -132,14 +133,13 @@ function processMainMenu(input) {
             getUserInput(['characterName', 'characterClass'], processCreateCharacter);
             break;
         case 'DELETE':
-            quit();
+            diaplayDeleteMenu();
             break;
         case 'UPDATE':
             quit();
             break;
         case 'VIEW':
             displayViewMenu();
-            //getUserInput(['characterName'], processView);
             break;
         case 'QUIT':
             quit();
@@ -157,47 +157,123 @@ function processMainMenu(input) {
 
 }
 
+function diaplayDeleteMenu() {
+        displayCharacters(function (foundChar) {
+        if (!foundChar) {
+            getUserInput(mainMenuParams, processMainMenu);
+        } else {
+            console.log("TYPE A CHARACTER NAME TO DELETE");
+            getUserInput(['characterName'], processDeletion);
+        }
+    });
+
+}
+var characterToDelete = '';
+
+function processDeletion(input) {
+    characterToDelete = input.charactername;
+    getBasicCharInfo(characterToDelete, function(results) {
+        console.log("ARE YOU SURE?");
+        getUserInput(['Confirm'], finalizeDeletion);
+    });
+        
+    
+}
+function finalizeDeletion(input){
+    if (input.Confirm != "Y"){
+        getUserInput(mainMenuParams, processMainMenu);
+    } else {
+    connection.query('CALL delete_character(\'' + characterToDelete + '\');', function (error, results, fields) {
+        if (error) throw error;
+        console.log(results);
+        getUserInput(mainMenuParams, processMainMenu);
+    });
+    }
+}
+
 function processView(input) {
 
-    connection.query('SELECT character_id FROM characters WHERE character_name = \'' + input.characterName + '\';', function (error, results, fields) {
-        if (error) throw error;
-        var CharacterID = results[0].character_id;
-        //console.log("CHAR NAME:");
-        //console.log(results[0].character_id);
-        connection.query('CALL read_basic_char_info(\'' + CharacterID + '\')', function (error, results, fields) {
-            if (error) throw error;
-            refreshView();
-            displayBasicCharInfo(results[0]);
-            connection.query('CALL read_equipment_detail(\'' + CharacterID + '\')', function (error, results, fields) {
-                if (error) throw error;
-                displayCharEquipInfo(results[0]);
-                connection.query('CALL read_skills_detail(\'' + CharacterID + '\')', function (error, results, fields) {
-                    if (error) throw error;
-                    displayCharSkillsInfo(results[0]);
-                    connection.query('CALL read_spells_detail(\'' + CharacterID + '\')', function (error, results, fields) {
-                        if (error) throw error;
-                        displayCharSpellsInfo(results[0]);
-                        getUserInput(mainMenuParams, processMainMenu);
+    getCharID(input.characterName, function (results) {
+        if (results[0] == undefined) {
+            displayViewMenu();
+        } else {
+
+            var CharacterID = results[0].character_id;
+            //console.log("CHAR NAME:");
+            //console.log(results[0].character_id);
+            //
+            getBasicCharInfo(CharacterID, function (results) {
+                refreshView();
+                displayBasicCharInfo(results[0]);
+                getDetailedCharInfo(input.characterName, function (results) {
+                    displayDetailCharInfo(results[0]);
+                    getCharEquipInfo(CharacterID, function (results) {
+                        displayCharEquipInfo(results[0]);
+                        getCharSkillsInfo(CharacterID, function (results) {
+                            displayCharSkillsInfo(results[0]);
+                            getCharSpellsInfo(CharacterID, function (results) {
+                                displayCharSpellsInfo(results[0]);
+                                console.log("ENTER A COMMAND:");
+                                getUserInput(mainMenuParams, processMainMenu);
+
+                            });
+                        });
 
                     });
 
                 });
-
             });
-        });
+        }
     });
 
 
 }
+function getCharID(characterName, callback) {
+    connection.query('SELECT character_id FROM characters WHERE character_name = \'' + characterName + '\';', function (error, results, fields) {
+        if (error) throw error;
+        callback(results);
+    });
+}
 
+function getBasicCharInfo(CharacterID, callback) {
+    connection.query('CALL read_basic_char_info(\'' + CharacterID + '\')', function (error, results, fields) {
+        if (error) throw error;
+        callback(results);
+    });
+}
+function getDetailedCharInfo(characterName, callback) {
+    connection.query('CALL read_character_detail(\'' + characterName + '\')', function (error, results, fields) {
+        if (error) throw error;
+        callback(results);
+    });
+}
+function getCharEquipInfo(CharacterID, callback) {
+    connection.query('CALL read_equipment_detail(\'' + CharacterID + '\')', function (error, results, fields) {
+        if (error) throw error;
+        callback(results);
+    });
+}
+function getCharSkillsInfo(CharacterID, callback) {
+    connection.query('CALL read_skills_detail(\'' + CharacterID + '\')', function (error, results, fields) {
+        if (error) throw error;
+        callback(results);
+    });
+}
+function getCharSpellsInfo(CharacterID, callback) {
+    connection.query('CALL read_spells_detail(\'' + CharacterID + '\')', function (error, results, fields) {
+        if (error) throw error;
+        callback(results);
+    });
+}
 function displayBasicCharInfo(info) {
-    console.log("##########################################################");
+    console.log("###################################################################################################");
     console.log("CHARACTER NAME: " + info[0].character_name + "\t\tLEVEL: " + info[0].character_level + "\t\tCLASS: " + info[0].class_name + "\t\tHP: " + 0 + "/" + 0);
-    console.log("##########################################################");
+
 }
 
 function displayDetailCharInfo(info) {
-    console.log(info);
+    console.log("###################################################################################################");
+    console.log("STR: " + info[0].strength + "\t\tDEX: " + info[0].dexterity + "\t\tCON: " + info[0].constitution + "\t\tINT: " + info[0].intelligence + "\t\tWIS: " + info[0].wisdom + "\t\tCHA: " + info[0].charisma);
 }
 
 function displayCharEquipInfo(info) {
@@ -211,14 +287,30 @@ function displayCharSpellsInfo(info) {
 }
 
 function displayViewMenu() {
-    connection.query('CALL read_all_characters(\'' + playerEmail + '\')', function (error, results, fields) {
-        if (error) throw error;
-
-        console.log(results[0]);
-        console.log("VIEW WHICH CHARACTER?");
-        getUserInput(['characterName'], processView);
+    displayCharacters(function (foundChar) {
+        if (!foundChar) {
+            getUserInput(mainMenuParams, processMainMenu);
+        } else {
+            console.log("TYPE A CHARACTER NAME TO VIEW");
+            getUserInput(['characterName'], processView);
+        }
     });
 
+}
+function displayCharacters(callback) {
+    connection.query('CALL read_all_characters(\'' + playerEmail + '\')', function (error, results, fields) {
+        if (error) throw error;
+        if (results[0] == undefined) {
+            console.log("NO CHARACTERS TO DISPLAY, TRY CREATING A CHARACTER.");
+            callback(false);
+        } else {
+            console.log("YOUR CHARACTERS: ");
+            for (var i = 0; i < results[0].length; i++) {
+                console.log(results[0][i].character_name);
+            }
+            callback(true);
+        }
+    });
 }
 
 function displayHelpMenu() {
@@ -226,7 +318,7 @@ function displayHelpMenu() {
     console.log("HELP LIST:");
     console.log("\t-\t-\t-\tMAIN MENU COMMANDS\t-\t-\t-");
     console.log("CREATE\t-\tcreates a new character.");
-    console.log("VIEW\t-\tshows the stats of the character.");
+    console.log("VIEW\t-\tshows the stats of the character. (MOSTLY FINISHED)");
     console.log("UPDATE\t-\tallows players to update their characters. (NOT FINISHED)");
     console.log("DELETE\t-\tdeletes character from the system. (NOT FINISHED)");
     console.log("HELP\t-\tshows the help menu.");
