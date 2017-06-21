@@ -250,20 +250,106 @@ CREATE PROCEDURE create_character
  */
 BEGIN
 	DECLARE sql_error INT DEFAULT FALSE;
+    DECLARE prim_attrb1 ENUM('strength','dexterity','constitution','intelligence','wisdom','charisma');
+    DECLARE prim_attrb2 ENUM('strength','dexterity','constitution','intelligence','wisdom','charisma');
+    DECLARE char_id INT;
+    DECLARE char_cons INT;
+    
     
     DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
     SET sql_error = TRUE;
     
-	INSERT INTO characters(character_name, class_id, player_id)
-    VALUES (character_name_param, 
-		(SELECT class_id FROM class WHERE class_name = class_name_param), 
-        (SELECT player_id FROM players WHERE player_email = player_email_param));
-	
-	IF sql_error = FALSE THEN
-		SELECT CONCAT('Character, ',character_name_param, ', successfully added to game.') as Message;
-	ELSE
-		SELECT 'Character not successfully added to game' as Message;
-	END IF;
+    START TRANSACTION;
+    
+		INSERT INTO characters(character_name, class_id, player_id)
+		VALUES (character_name_param, 
+			(SELECT class_id FROM class WHERE class_name = class_name_param), 
+			(SELECT player_id FROM players WHERE player_email = player_email_param));
+		
+        SELECT character_id into char_id
+        FROM characters
+        WHERE character_name = character_name_parameter;
+        
+        CASE
+			WHEN prim_attrb1 = 'strength' THEN
+				UPDATE characters c
+                SET c.strength = 1
+                WHERE char_id = character_id;
+                
+			WHEN prim_attrb1 = 'dexterity' THEN
+				UPDATE characters c
+                SET c.dexterity = 1
+                WHERE char_id = character_id;
+                
+			WHEN prim_attrb1 = 'constitution' THEN
+				UPDATE characters c
+                SET c.constitution = 1
+                WHERE char_id = character_id;
+                
+			WHEN prim_attrb1 = 'intelligence' THEN
+				UPDATE characters c
+                SET c.intelligence = 1
+                WHERE char_id = character_id;
+                
+			WHEN prim_attrb1 = 'wisdom' THEN
+				UPDATE characters c
+                SET c.wisdom = 1
+                WHERE char_id = character_id;
+                
+			WHEN prim_attrb1 = 'charisma' THEN
+				UPDATE characters c
+                SET c.charisma = 1
+                WHERE char_id = character_id;
+                
+		END CASE;
+        
+        CASE
+			WHEN prim_attrb2 = 'strength' THEN
+				UPDATE characters c
+                SET c.strength = 1
+                WHERE char_id = character_id;
+                
+			WHEN prim_attrb2 = 'dexterity' THEN
+				UPDATE characters c
+                SET c.dexterity = 1
+                WHERE char_id = character_id;
+                
+			WHEN prim_attrb2 = 'constitution' THEN
+				UPDATE characters c
+                SET c.constitution = 1
+                WHERE char_id = character_id;
+                
+			WHEN prim_attrb2 = 'intelligence' THEN
+				UPDATE characters c
+                SET c.intelligence = 1
+                WHERE char_id = character_id;
+                
+			WHEN prim_attrb2 = 'wisdom' THEN
+				UPDATE characters c
+                SET c.wisdom = 1
+                WHERE char_id = character_id;
+                
+			WHEN prim_attrb2 = 'charisma' THEN
+				UPDATE characters c
+                SET c.charisma = 1
+                WHERE char_id = character_id;
+                
+		END CASE;
+		
+        SELECT constitution INTO char_cons
+        FROM characters
+        WHERE char_id = character_id;
+        
+        INSERT INTO health_points
+        VALUES (char_id, char_cons + 5, char_cons + 5);
+    
+		IF sql_error = FALSE THEN
+			COMMIT;
+			SELECT CONCAT('Character, ',character_name_param, ', successfully added to game.') as Message;
+		ELSE
+			ROLLBACK;
+			SELECT 'Character not successfully added to game' as Message;
+		END IF;
 END //
 DELIMITER ;
 
