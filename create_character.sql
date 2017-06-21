@@ -12,10 +12,6 @@ CREATE PROCEDURE create_character
  */
 BEGIN
 	DECLARE sql_error INT DEFAULT FALSE;
-    DECLARE prim_attrb1 ENUM('strength','dexterity','constitution','intelligence','wisdom','charisma');
-    DECLARE prim_attrb2 ENUM('strength','dexterity','constitution','intelligence','wisdom','charisma');
-    DECLARE char_id INT;
-    DECLARE char_cons INT;
     
     
     DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
@@ -25,21 +21,41 @@ BEGIN
 	VALUES (character_name_param, 
 		(SELECT class_id FROM class WHERE class_name = class_name_param), 
 		(SELECT player_id FROM players WHERE player_email = player_email_param));
+END //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS new_char_stats;
+
+DELIMITER //
+CREATE PROCEDURE new_char_stats
+(
+	character_name_param VARCHAR(64),
+    class_id_param INT
+)
+BEGIN
+	DECLARE sql_error INT DEFAULT FALSE;
+    DECLARE prim_attrb1 ENUM('strength','dexterity','constitution','intelligence','wisdom','charisma');
+    DECLARE prim_attrb2 ENUM('strength','dexterity','constitution','intelligence','wisdom','charisma');
+    DECLARE char_id INT;
+    DECLARE char_cons INT;
     
-    START TRANSACTION;
-		
-        SELECT character_id into char_id
-        FROM characters
-        WHERE character_name = character_name_parameter;
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    SET sql_error = TRUE;
+    
+    SELECT character_id into char_id
+	FROM characters
+	WHERE character_name = character_name_param;
         
-        SELECT attribute1 into prim_attrb1
-        FROM class
-        WHERE class_name = class_name_param;
+	SELECT attribute1 into prim_attrb1
+	FROM class
+	WHERE class_id = class_id_param;
         
-        SELECT attribute2 into prim_attrb2
-        FROM class
-        WHERE class_name = class_name_param;
+	SELECT attribute2 into prim_attrb2
+	FROM class
+	WHERE class_id = class_id_param;
         
+    
+	START TRANSACTION;
         CASE
 			WHEN prim_attrb1 = 'strength' THEN
 				UPDATE characters c
@@ -111,14 +127,14 @@ BEGIN
         WHERE char_id = character_id;
         
         INSERT INTO health_points
-        VALUES (char_id, (SELECT char_cons + 5), (SELECT char_cons + 5));
+        VALUES (char_id, (SELECT SUM(char_cons + 5)), (SELECT SUM(char_cons + 5)));
     
 		IF sql_error = FALSE THEN
 			COMMIT;
-			SELECT CONCAT('Character, ',character_name_param, ', successfully added to game.') as Message;
+			SELECT CONCAT('Character, ',character_name_param, ', successfully adjusted for level 1.') as Message;
 		ELSE
 			ROLLBACK;
-			SELECT 'Character not successfully added to game' as Message;
+			SELECT 'Character not successfully adjusted for level 1.' as Message;
 		END IF;
 END //
 DELIMITER ;
