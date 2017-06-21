@@ -366,7 +366,12 @@ function displayHelpMenu() {
     console.log("CREATE\t-\tcreates a new character.");
     console.log("VIEW\t-\tshows the stats of the character. (MOSTLY FINISHED)");
     console.log("UPDATE\t-\tallows players to update their characters. (NOT FINISHED)");
-    console.log("DELETE\t-\tdeletes character from the system. (NOT FINISHED)");
+    console.log("DELETE\t-\tdeletes character from the system.");
     console.log("HELP\t-\tshows the help menu.");
     console.log("QUIT\t-\texits the program.");
+    console.log("\r\t-\t-\t-\tUPDATE COMMANDS\t-\t-\t-");
+    console.log("LEVELUP\t-\tlevels up a character.");
+    console.log("RENAME\t-\trenames a character. (MOSTLY FINISHED)");
+    console.log("CLASS\t-\tchanges the character's class. (NOT FINISHED)");
+    console.log("BACK\t-\tgoes back to main menu");
 }
