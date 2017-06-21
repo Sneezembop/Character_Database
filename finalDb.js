@@ -121,7 +121,7 @@ function processCreateCharacter(input) {
         refreshView();
         console.log(results);
         console.log("CHARACTER CREATED!");
-        getUserInput(mainMenuParams, processMainMenu);
+        backToMainMenu();
     });
 
 }
@@ -136,7 +136,7 @@ function processMainMenu(input) {
             diaplayDeleteMenu();
             break;
         case 'UPDATE':
-            quit();
+            displayUpdateMenu();
             break;
         case 'VIEW':
             displayViewMenu();
@@ -150,15 +150,46 @@ function processMainMenu(input) {
             break;
         default:
             console.log("INVALID COMMAND, TRY AGAIN.  TYPE HELP IF YOU NEED ASSISTANCE.");
-            console.log("PLEASE ENTER A COMMAND:");
             getUserInput(mainMenuParams, processMainMenu);
     }
 
 
 }
 
-function diaplayDeleteMenu() {
+function displayUpdateMenu() {
         displayCharacters(function (foundChar) {
+        if (!foundChar) {
+            getUserInput(mainMenuParams, processMainMenu);
+        } else {
+            console.log("TYPE A CHARACTER NAME TO UPDATE");
+            getUserInput(['characterName', 'update'], processUpdate);
+        }
+    });
+}
+
+function processUpdate(input){
+    switch(input.update){
+        case 'LEVELUP':
+        console.log("LEVELED UP " + input.characterName);
+        break;
+        case 'RENAME':
+        console.log("RENAMED " + input.characterName);
+        break;
+        case 'CLASS':
+        console.log("CLASS CHANGE " + input.characterName);
+        break;
+        case 'BACK' :
+            backToMainMenu();
+        break;
+        default :
+        console.log("INVALID FUNCTION TRY AGAIN, BACK TO GO BACK.");
+    }
+
+    getUserInput(mainMenuParams, processMainMenu);
+}
+
+function diaplayDeleteMenu() {
+    displayCharacters(function (foundChar) {
         if (!foundChar) {
             getUserInput(mainMenuParams, processMainMenu);
         } else {
@@ -171,23 +202,32 @@ function diaplayDeleteMenu() {
 var characterToDelete = '';
 
 function processDeletion(input) {
-    characterToDelete = input.charactername;
-    getBasicCharInfo(characterToDelete, function(results) {
-        console.log("ARE YOU SURE?");
-        getUserInput(['Confirm'], finalizeDeletion);
+    //console.log(input);
+    characterToDelete = input.characterName;
+    getCharID(characterToDelete, function (charID) {
+
+        //console.log(charID[0].character_id);
+        getBasicCharInfo(charID[0].character_id, function (results) {
+            displayBasicCharInfo(results[0]);
+            console.log("ARE YOU SURE?");
+            getUserInput(['Confirm'], finalizeDeletion);
+        });
     });
-        
-    
+
+
 }
-function finalizeDeletion(input){
-    if (input.Confirm != "Y"){
+function finalizeDeletion(input) {
+    if (input.Confirm != "Y") {
         getUserInput(mainMenuParams, processMainMenu);
     } else {
-    connection.query('CALL delete_character(\'' + characterToDelete + '\');', function (error, results, fields) {
-        if (error) throw error;
-        console.log(results);
-        getUserInput(mainMenuParams, processMainMenu);
-    });
+        getCharID(characterToDelete, function (result) {
+            connection.query('CALL delete_character(\'' + characterToDelete + '\');', function (error, results, fields) {
+                if (error) throw error;
+                console.log(results);
+                getUserInput(mainMenuParams, processMainMenu);
+            });
+
+        });
     }
 }
 
@@ -233,6 +273,11 @@ function getCharID(characterName, callback) {
         if (error) throw error;
         callback(results);
     });
+}
+function backToMainMenu() {
+    refreshView();
+    console.log("ENTER A COMMAND:");
+    getUserInput(mainMenuParams, processMainMenu);
 }
 
 function getBasicCharInfo(CharacterID, callback) {
@@ -300,7 +345,8 @@ function displayViewMenu() {
 function displayCharacters(callback) {
     connection.query('CALL read_all_characters(\'' + playerEmail + '\')', function (error, results, fields) {
         if (error) throw error;
-        if (results[0] == undefined) {
+        //console.log(results);
+        if (results[0][0] == undefined) {
             console.log("NO CHARACTERS TO DISPLAY, TRY CREATING A CHARACTER.");
             callback(false);
         } else {
