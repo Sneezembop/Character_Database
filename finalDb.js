@@ -25,13 +25,6 @@ var playerAdmin = false;
 main();
 
 
-/*
-connection.query('SELECT * FROM planets WHERE planets.affiliation = \'rebels\'', function (error, results, fields) {
-  if (error) throw error;
-  console.log('The solution is:\n', results);
-});
- */
-
 function quit() {
     prompt.stop();
     connection.end();
@@ -131,9 +124,6 @@ function processCreateCharacter(input) {
     });
 
 }
-
-
-var ValidMainCommands = ['CREATE', 'DELETE', 'UPDATE', 'VIEW', 'QUIT', 'HELP'];
 
 function processMainMenu(input) {
     refreshView();
