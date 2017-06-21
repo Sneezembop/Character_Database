@@ -12,15 +12,35 @@ CREATE PROCEDURE create_character
  */
 BEGIN
 	DECLARE sql_error INT DEFAULT FALSE;
+    DECLARE c_id INT;
     
     
     DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
     SET sql_error = TRUE;
     
-    INSERT INTO characters(character_name, class_id, player_id)
-	VALUES (character_name_param, 
-		(SELECT class_id FROM class WHERE class_name = class_name_param), 
-		(SELECT player_id FROM players WHERE player_email = player_email_param));
+    START TRANSACTION;
+		SELECT class_id INTO c_id
+        FROM class
+        WHERE class_name = class_name_param;
+    
+		INSERT INTO characters(character_name, class_id, player_id,strength,dexterity,constitution,intelligence,wisdom,charisma)
+		VALUES (character_name_param, 
+			c_id, 
+			(SELECT player_id FROM players WHERE player_email = player_email_param),
+			calculate_attribute_value(c_id,'strength',1),
+			calculate_attribute_value(c_id,'dexterity',1),
+            calculate_attribute_value(c_id,'constitution',1),
+            calculate_attribute_value(c_id,'intelligence',1),
+            calculate_attribute_value(c_id,'wisdom',1),
+            calculate_attribute_value(c_id,'charisma',1));
+	
+    IF sql_error = FALSE THEN
+		COMMIT;
+		SELECT 'Character successfully created.' as Message;
+	ELSE
+		ROLLBACK;
+		SELECT 'Character not successfully created.' as Message;
+	END IF;
 END //
 DELIMITER ;
 
@@ -53,19 +73,19 @@ BEGIN
 END //
 DELIMITER ;
 
-DROP TRIGGER IF EXISTS strength_trigger_new
+/*DROP TRIGGER IF EXISTS strength_trigger_new;
 DELIMITER //
 CREATE TRIGGER strength_trigger_new
 	AFTER INSERT ON characters
     FOR EACH ROW
 BEGIN
 	UPDATE characters c
-    SET c.strength = calculate_attribute_value(NEW.class_id,'strength',NEW.character_level)
+    SET strength = calculate_attribute_value(NEW.class_id,'strength',NEW.character_level)
     WHERE c.character_id = NEW.character_id;
 END //
 DELIMITER ;
 
-DROP TRIGGER IF EXISTS dexterity_trigger_new
+DROP TRIGGER IF EXISTS dexterity_trigger_new;
 DELIMITER //
 CREATE TRIGGER dexterity_trigger_new
 	AFTER INSERT ON characters
@@ -77,7 +97,7 @@ BEGIN
 END //
 DELIMITER ;
 
-DROP TRIGGER IF EXISTS constitution_trigger_new
+DROP TRIGGER IF EXISTS constitution_trigger_new;
 DELIMITER //
 CREATE TRIGGER constitution_trigger_new
 	AFTER INSERT ON characters
@@ -89,7 +109,7 @@ BEGIN
 END //
 DELIMITER ;
 
-DROP TRIGGER IF EXISTS intelligence_trigger_new
+DROP TRIGGER IF EXISTS intelligence_trigger_new;
 DELIMITER //
 CREATE TRIGGER intelligence_trigger_new
 	AFTER INSERT ON characters
@@ -101,7 +121,7 @@ BEGIN
 END //
 DELIMITER ;
 
-DROP TRIGGER IF EXISTS wisdom_trigger_new
+DROP TRIGGER IF EXISTS wisdom_trigger_new;
 DELIMITER //
 CREATE TRIGGER wisdom_trigger_new
 	AFTER INSERT ON characters
@@ -113,7 +133,7 @@ BEGIN
 END //
 DELIMITER ;
 
-DROP TRIGGER IF EXISTS charisma_trigger_new
+DROP TRIGGER IF EXISTS charisma_trigger_new;
 DELIMITER //
 CREATE TRIGGER charisma_trigger_new
 	AFTER INSERT ON characters
@@ -123,7 +143,10 @@ BEGIN
     SET c.charisma = calculate_attribute_value(NEW.class_id,'charisma',NEW.character_level)
     WHERE c.character_id = NEW.character_id;
 END //
-DELIMITER ;
+DELIMITER ;*/
+
+
+
 
 /*DROP PROCEDURE IF EXISTS new_char_stats;
 
