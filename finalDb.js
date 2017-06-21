@@ -121,7 +121,7 @@ function processCreateCharacter(input) {
         refreshView();
         console.log(results);
         console.log("CHARACTER CREATED!");
-        backToMainMenu();
+        getUserInput(mainMenuParams, processMainMenu);
     });
 
 }
@@ -177,6 +177,9 @@ function processUpdate(input){
         break;
         case 'CLASS':
         console.log("CLASS CHANGE " + input.characterName);
+        break;
+        case 'HEALTH':
+        console.log("HEALTH CHANGE" + input.characterName);
         break;
         case 'BACK' :
             backToMainMenu();
@@ -283,6 +286,7 @@ function backToMainMenu() {
 function getBasicCharInfo(CharacterID, callback) {
     connection.query('CALL read_basic_char_info(\'' + CharacterID + '\')', function (error, results, fields) {
         if (error) throw error;
+        
         callback(results);
     });
 }
@@ -311,8 +315,9 @@ function getCharSpellsInfo(CharacterID, callback) {
     });
 }
 function displayBasicCharInfo(info) {
+    //console.log(info);
     console.log("###################################################################################################");
-    console.log("CHARACTER NAME: " + info[0].character_name + "\t\tLEVEL: " + info[0].character_level + "\t\tCLASS: " + info[0].class_name + "\t\tHP: " + 0 + "/" + 0);
+    console.log("CHARACTER NAME: " + info[0].character_name + "\t\tLEVEL: " + info[0].character_level + "\t\tCLASS: " + info[0].class_name + "\t\tHP: " + info[0].current_health_points + "/" + info[0].total_health_points);
 
 }
 
@@ -373,5 +378,6 @@ function displayHelpMenu() {
     console.log("LEVELUP\t-\tlevels up a character.");
     console.log("RENAME\t-\trenames a character. (MOSTLY FINISHED)");
     console.log("CLASS\t-\tchanges the character's class. (NOT FINISHED)");
+    console.log("HEALTH\t-\tsets the character's current health");
     console.log("BACK\t-\tgoes back to main menu");
 }
