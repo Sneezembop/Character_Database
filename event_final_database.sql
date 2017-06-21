@@ -15,3 +15,16 @@ DO BEGIN
 END//
 
 DELIMITER ;
+
+DROP TRIGGER IF EXISTS health_point_update;
+DELIMITER //
+CREATE TRIGGER health_point_update
+	BEFORE UPDATE ON health_points
+    FOR EACH ROW
+BEGIN
+	IF NEW.current_health_points > NEW.total_health_points THEN
+		SET NEW.current_health_points = NEW.total_health_points;
+	END IF;
+END //
+DELIMITER ;
+    
