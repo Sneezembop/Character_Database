@@ -692,8 +692,9 @@ CREATE PROCEDURE read_spells_detail
 )
 BEGIN        
 	SELECT *
-	FROM class_spells cs join spells
+	FROM class_spells cs join spells join characters c
 		ON cs.spell_id = spells.spell_id
+        AND c.class_id = cs.class_id
     WHERE cs.char_id = char_id_param;
 END //
 
@@ -709,8 +710,9 @@ CREATE PROCEDURE read_skills_detail
 )
 BEGIN        
 	SELECT *
-	FROM class_skills cs join skills
+	FROM class_skills cs join skills join characters c
 		ON cs.skill_id = skills.skill_id
+        AND c.class_id = cs.class_id
     WHERE cs.char_id = char_id_param;
 END //
 
