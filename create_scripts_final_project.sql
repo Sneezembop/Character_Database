@@ -525,9 +525,8 @@ CREATE PROCEDURE read_equipment_detail
 )
 BEGIN        
 	SELECT *
-	FROM character_equipment ce join equipment e join armor a
+	FROM character_equipment ce join equipment e 
 		ON ce.equip_id = e.equipment_id
-        and e.equipment_id = a.equipment_id
     WHERE ce.char_id = char_id_param;
 END //
 
@@ -576,7 +575,7 @@ CREATE PROCEDURE read_basic_char_info
 	char_id_param	INT
 )
 BEGIN        
-	SELECT c.character_name, c.character_level, cl.class_name, h.current_health_points
+	SELECT c.character_name, c.character_level, cl.class_name, h.current_health_points, h.total_health_points
 	FROM characters c join class cl join health_points h
 		on c.class_id = cl.class_id
         AND c.character_id = h.character_id
