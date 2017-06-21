@@ -157,7 +157,7 @@ function processMainMenu(input) {
 }
 
 function displayUpdateMenu() {
-        displayCharacters(function (foundChar) {
+    displayCharacters(function (foundChar) {
         if (!foundChar) {
             getUserInput(mainMenuParams, processMainMenu);
         } else {
@@ -167,28 +167,51 @@ function displayUpdateMenu() {
     });
 }
 
-function processUpdate(input){
-    switch(input.update){
+function processUpdate(input) {
+    switch (input.update) {
         case 'LEVELUP':
-        console.log("LEVELED UP " + input.characterName);
-        break;
+            levelup(input.characterName);
+            break;
         case 'RENAME':
-        console.log("RENAMED " + input.characterName);
-        break;
+            console.log("RENAMED " + input.characterName);
+            getUserInput(mainMenuParams, processMainMenu);
+            break;
         case 'CLASS':
-        console.log("CLASS CHANGE " + input.characterName);
-        break;
+            classChange(input.characterName);
+            break;
         case 'HEALTH':
-        console.log("HEALTH CHANGE" + input.characterName);
-        break;
-        case 'BACK' :
+            console.log("HEALTH CHANGE" + input.characterName);
+            getUserInput(mainMenuParams, processMainMenu);
+            break;
+        case 'BACK':
             backToMainMenu();
-        break;
-        default :
-        console.log("INVALID FUNCTION TRY AGAIN, BACK TO GO BACK.");
+            break;
+        default:
+            console.log("INVALID FUNCTION TRY AGAIN, BACK TO GO BACK.");
+            getUserInput(mainMenuParams, processMainMenu);
     }
 
-    getUserInput(mainMenuParams, processMainMenu);
+
+}
+
+function levelup(characterName) {
+    connection.query('CALL character_level_up(\'' + characterName + '\');', function (error, results, fields) {
+        if (error) throw error;
+        console.log(results);
+        getUserInput(mainMenuParams, processMainMenu);
+    });
+
+}
+function classChange(characterName) {
+    getUserInput(['newClass'], function (input) {
+        var myquery = 'CALL change_class(\'' + characterName + '\', \'' + input.newClass + '\');'
+        console.log(myquery);
+        connection.query(myquery, function (error, results, fields) {
+            console.log(results);
+            getUserInput(mainMenuParams, processMainMenu);
+        });
+
+    });
 }
 
 function diaplayDeleteMenu() {
@@ -286,7 +309,7 @@ function backToMainMenu() {
 function getBasicCharInfo(CharacterID, callback) {
     connection.query('CALL read_basic_char_info(\'' + CharacterID + '\')', function (error, results, fields) {
         if (error) throw error;
-        
+
         callback(results);
     });
 }
@@ -327,13 +350,26 @@ function displayDetailCharInfo(info) {
 }
 
 function displayCharEquipInfo(info) {
-    console.log(info);
+    console.log("###################################################################################################");
+    console.log("EQUIPMENT");
+    for (var i = 0; i < info.length; i++) {
+        console.log("ITEM: " + info[i].equipment_name + "\t\tWT: " + info[i].equipment_weight + "\t\tQT: " + info[i].ce_quantity + "\t\tDESC: " + info[i].equipment_description);
+    }
+
 }
 function displayCharSkillsInfo(info) {
-    console.log(info);
+    console.log("###################################################################################################");
+    console.log("SKILLS");
+    for (var i = 0; i < info.length; i++) {
+        console.log("NAME: " + info[i].skill_name + "\t\tLVL: " + info[i].level + "\t\tATT: " + info[i].attribute + "\t\tDESC: " + info[i].skill_description);
+    }
 }
 function displayCharSpellsInfo(info) {
-    console.log(info);
+    console.log("###################################################################################################");
+    console.log("SPELLS");
+    for (var i = 0; i < info.length; i++) {
+        console.log("NAME: " + info[i].spell_name + "\t\tLVL: " + info[i].level + "\t\tATT: " + info[i].attribute + "\t\tDESC: " + info[i].spell_description);
+    }
 }
 
 function displayViewMenu() {
