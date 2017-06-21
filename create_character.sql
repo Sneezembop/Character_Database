@@ -84,7 +84,7 @@ BEGIN
 END //
 DELIMITER ;
 
-DROP TRIGGER IF EXISTS get_starter_equip
+DROP TRIGGER IF EXISTS get_starter_equip;
 DELIMITER //
 CREATE TRIGGER get_starter_equip
 	AFTER INSERT ON health_points
