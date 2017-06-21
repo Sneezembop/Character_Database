@@ -240,9 +240,9 @@ DROP PROCEDURE IF EXISTS create_character;
 DELIMITER //
 CREATE PROCEDURE create_character
 (
-    character_name_param	VARCHAR(24),
+    character_name_param	VARCHAR(64),
     class_name_param	VARCHAR(64),
-    player_email_param VARCHAR(24)
+    player_email_param VARCHAR(64)
 )
 /**
  * Procedure to create a new character in the game
@@ -269,6 +269,14 @@ BEGIN
         SELECT character_id into char_id
         FROM characters
         WHERE character_name = character_name_parameter;
+        
+        /*SELECT attribute1 into prim_attrb1
+        FROM class
+        WHERE class_name = class_name_param;
+        
+        SELECT attribute2 into prim_attrb2
+        FROM class
+        WHERE class_name = class_name_param;
         
         CASE
 			WHEN prim_attrb1 = 'strength' THEN
@@ -334,14 +342,14 @@ BEGIN
                 SET c.charisma = 1
                 WHERE char_id = character_id;
                 
-		END CASE;
+		END CASE;*/
 		
         SELECT constitution INTO char_cons
         FROM characters
         WHERE char_id = character_id;
         
         INSERT INTO health_points
-        VALUES (char_id, char_cons + 5, char_cons + 5);
+        VALUES (char_id, (SELECT char_cons + 5), (SELECT char_cons + 5));
     
 		IF sql_error = FALSE THEN
 			COMMIT;
