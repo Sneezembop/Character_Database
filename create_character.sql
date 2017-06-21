@@ -21,6 +21,7 @@ BEGIN
 	VALUES (character_name_param, 
 		(SELECT class_id FROM class WHERE class_name = class_name_param), 
 		(SELECT player_id FROM players WHERE player_email = player_email_param));
+	CALL new_char_stats(character_name_param, (SELECT class_id FROM class WHERE class_name = class_name_param));
 END //
 DELIMITER ;
 
@@ -131,10 +132,10 @@ BEGIN
     
 		IF sql_error = FALSE THEN
 			COMMIT;
-			SELECT CONCAT('Character, ',character_name_param, ', successfully adjusted for level 1.') as Message;
+			SELECT CONCAT('Character, ',character_name_param, ', successfully create and adjusted for level 1.') as Message;
 		ELSE
 			ROLLBACK;
-			SELECT 'Character not successfully adjusted for level 1.' as Message;
+			SELECT 'Character not successfully created.' as Message;
 		END IF;
 END //
 DELIMITER ;
