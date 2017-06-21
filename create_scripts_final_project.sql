@@ -695,7 +695,7 @@ BEGIN
 	FROM class_spells cs join spells join characters c
 		ON cs.spell_id = spells.spell_id
         AND c.class_id = cs.class_id
-    WHERE cs.char_id = char_id_param;
+    WHERE c.char_id = char_id_param;
 END //
 
 DELIMITER ;
@@ -713,7 +713,7 @@ BEGIN
 	FROM class_skills cs join skills join characters c
 		ON cs.skill_id = skills.skill_id
         AND c.class_id = cs.class_id
-    WHERE cs.char_id = char_id_param;
+    WHERE c.char_id = char_id_param;
 END //
 
 DELIMITER ;
