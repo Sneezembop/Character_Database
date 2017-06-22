@@ -33,14 +33,17 @@ BEGIN
         WHERE char_id = characters.character_id;
     
 		UPDATE characters
-        SET class_id = c_id, 
-			strength =  calculate_attribute_value(c_id,'strength',char_level),
+        SET class_id = c_id
+        WHERE char_id = characters.character_id;
+        
+        UPDATE attributes
+        SET strength =  calculate_attribute_value(c_id,'strength',char_level),
 			dexterity = calculate_attribute_value(c_id,'dexterity',char_level),
             constitution = calculate_attribute_value(c_id,'constitution',char_level),
             intelligence =  calculate_attribute_value(c_id,'intelligence',char_level),
             wisdom =  calculate_attribute_value(c_id,'wisdom',char_level),
             charisma =  calculate_attribute_value(c_id,'charisma',char_level)
-        WHERE char_id = characters.character_id;
+		WHERE char_id = attributes.character_id;
         
         INSERT INTO character_equipment
 		SELECT c.character_id, equipment_id, quantity
