@@ -94,20 +94,3 @@ BEGIN
             calculate_attribute_value(NEW.class_id,'charisma',1));
 END //
 DELIMITER ;
-
-
-
-DROP TRIGGER IF EXISTS get_starter_equip;
-DELIMITER //
-CREATE TRIGGER get_starter_equip
-	AFTER INSERT ON health_points
-	FOR EACH ROW
-BEGIN
-	 INSERT INTO character_equipment
-	 SELECT c.character_id, equipment_id, quantity
-	 FROM class_equipment_loadout JOIN class join characters c
-	 ON class.class_id = class_equipment_loadout.class_id
-	 AND c.class_id = class.class_id
-	 WHERE class.class_id = (SELECT class_id FROM characters WHERE character_id = NEW.character_id);
- END //
-  DELIMITER ; 
