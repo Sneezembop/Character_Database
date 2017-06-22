@@ -24,7 +24,7 @@ BEGIN
         FROM class
         WHERE class_name = class_name_param;
     
-		INSERT INTO characters(character_name, class_id, player_id,strength,dexterity,constitution,intelligence,wisdom,charisma)
+		INSERT INTO characters(character_name, class_id, player_id)
 		VALUES (character_name_param, 
 			c_id, 
 			(SELECT player_id FROM players WHERE player_email = player_email_param));
