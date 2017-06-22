@@ -508,7 +508,8 @@ CREATE PROCEDURE read_character_detail
 	char_name_param	VARCHAR(64)
 )
 BEGIN        
-	SELECT *
+	SELECT c.character_id, c.character_name, c.class_id, c.character_level, c.player_id,
+		a.strength, a.dexterity, a.constitution, a.intelligence, a.wisdom, a.charisma
 	FROM characters c join attributes a
 		ON c.character_id = a.character_id
     WHERE character_name = char_name_param;
