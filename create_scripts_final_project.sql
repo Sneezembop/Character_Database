@@ -509,7 +509,8 @@ CREATE PROCEDURE read_character_detail
 )
 BEGIN        
 	SELECT *
-	FROM characters
+	FROM characters c join attributes a
+		ON c.character_id = a.character_id
     WHERE character_name = char_name_param;
 END //
 

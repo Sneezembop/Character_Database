@@ -4,8 +4,8 @@ DELIMITER //
 CREATE PROCEDURE change_equip
 (
 	char_id_param	INT,
-    old_equip_param	VARCHAR(64),
-    new_equip_param	VARCHAR(64)
+    old_equip_param	INT,
+    new_equip_param	INT
 )
 BEGIN
 	DECLARE sql_error INT DEFAULT FALSE;
