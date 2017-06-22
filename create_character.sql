@@ -27,13 +27,7 @@ BEGIN
 		INSERT INTO characters(character_name, class_id, player_id,strength,dexterity,constitution,intelligence,wisdom,charisma)
 		VALUES (character_name_param, 
 			c_id, 
-			(SELECT player_id FROM players WHERE player_email = player_email_param),
-			calculate_attribute_value(c_id,'strength',1),
-			calculate_attribute_value(c_id,'dexterity',1),
-            calculate_attribute_value(c_id,'constitution',1),
-            calculate_attribute_value(c_id,'intelligence',1),
-            calculate_attribute_value(c_id,'wisdom',1),
-            calculate_attribute_value(c_id,'charisma',1));
+			(SELECT player_id FROM players WHERE player_email = player_email_param));
 	
     IF sql_error = FALSE THEN
 		COMMIT;
@@ -77,7 +71,7 @@ DELIMITER ;
 DROP TRIGGER IF EXISTS create_health_points;
 DELIMITER //
 CREATE TRIGGER create_health_points
-	AFTER INSERT ON characters
+	AFTER INSERT ON attributes
     FOR EACH ROW
 BEGIN
     INSERT INTO health_points
@@ -85,17 +79,18 @@ BEGIN
 END //
 DELIMITER ;
 
-DROP TRIGGER IF EXISTS get_starter_equip;
+DROP TRIGGER IF EXISTS create_attribute_points;
 DELIMITER //
-CREATE TRIGGER get_starter_equip
-	AFTER INSERT ON health_points
+CREATE TRIGGER create_attribute_points
+	AFTER INSERT ON characters
     FOR EACH ROW
 BEGIN
-    INSERT INTO character_equipment
-    SELECT c.character_id, equipment_id, quantity
-    FROM class_equipment_loadout JOIN class join characters c
-    ON class.class_id = class_equipment_loadout.class_id
-    AND c.class_id = class.class_id
-    WHERE class.class_id = (SELECT class_id FROM characters WHERE character_id = NEW.character_id);
+    INSERT INTO attributes
+    VALUES (NEW.character_id,calculate_attribute_value(NEW.class_id,'strength',1),
+			calculate_attribute_value(NEW.class_id,'dexterity',1),
+            calculate_attribute_value(NEW.class_id,'constitution',1),
+            calculate_attribute_value(NEW.class_id,'intelligence',1),
+            calculate_attribute_value(NEW.class_id,'wisdom',1),
+            calculate_attribute_value(NEW.class_id,'charisma',1));
 END //
 DELIMITER ;
