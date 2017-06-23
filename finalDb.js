@@ -1,6 +1,6 @@
 
 // CS 5200 FINAL PROJECT
-// Nick Morgan, Miles Benjamin, AJ Esguerra                      
+// Nick Morgan, Miles Benjamin, Arnold Esguerra                      
 
 var mysql = require('mysql');
 
@@ -116,11 +116,12 @@ function processCreatePlayer(input) {
 }
 
 function processCreateCharacter(input) {
-    connection.query('CALL create_character(\'' + input.characterName + '\', \'' + input.characterClass + '\', \'' + playerEmail + '\')', function (error, results, fields) {
+    var query = 'CALL create_character(\'' + input.characterName + '\',\'' + input.characterClass + '\',\'' + playerEmail + '\');';
+    connection.query(query, function (error, results, fields) {
         if (error) throw error;
         refreshView();
+        console.log(query);
         console.log(results);
-        console.log("CHARACTER CREATED!");
         getUserInput(mainMenuParams, processMainMenu);
     });
 
@@ -161,8 +162,9 @@ function displayUpdateMenu() {
         if (!foundChar) {
             getUserInput(mainMenuParams, processMainMenu);
         } else {
-            console.log("TYPE A CHARACTER NAME TO UPDATE");
-            getUserInput(['characterName', 'update'], processUpdate);
+            console.log("TYPE A UPDATE PROCEDURE AND CHARACTER");
+            console.log("COMMANDS INCLUDE: LEVELUP, EQUIP, CLASS, HEALTH OR BACK");
+            getUserInput(['update', 'characterName'], processUpdate);
         }
     });
 }
@@ -175,6 +177,9 @@ function processUpdate(input) {
         case 'RENAME':
             console.log("RENAME AVAILABLE IN FULL PRODUCT");
             getUserInput(mainMenuParams, processMainMenu);
+            break;
+        case 'EQUIP':
+            equipChange(input.characterName);
             break;
         case 'CLASS':
             classChange(input.characterName);
@@ -193,7 +198,37 @@ function processUpdate(input) {
 
 }
 
-function healthChange(characterName){
+function equipChange(characterName) {
+    getCharID(characterName, function (charID) {
+        getCharEquipInfo(charID[0].character_id, function (info) {
+            displayCharEquipInfo(info[0]);
+            console.log('EQUIP OR UNEQUIP?');
+            getUserInput(['equip', 'itemName'], function (input) {
+                var myquery = '';
+                if (input.equip == 'EQUIP') {
+                    myquery = 'CALL add_equip_to_char(\'' + characterName + '\',\'' + input.equip + '\');';
+                } else if (input.equip == 'UNEQUIP') {
+                    myquery = 'CALL remove_char_equipment(\'' + characterName + '\',\'' + input.equip + '\');';
+                }
+
+                console.log(myquery);
+                if (myquery != '') {
+                    connection.query(myquery, function (error, results, fields) {
+                        console.log(results);
+                        getUserInput(mainMenuParams, processMainMenu);
+                    });
+                } else {
+                    getUserInput(mainMenuParams, processMainMenu);
+                }
+
+            });
+        })
+    });
+
+}
+
+
+function healthChange(characterName) {
     getUserInput(['healthVal'], function (input) {
         var myquery = 'CALL update_health(\'' + characterName + '\', \'down\', \'' + input.healthVal + '\');'
         console.log(myquery);
@@ -267,7 +302,6 @@ function finalizeDeletion(input) {
         });
     }
 }
-
 function processView(input) {
 
     getCharID(input.characterName, function (results) {
@@ -313,10 +347,10 @@ function getCharID(characterName, callback) {
 }
 function backToMainMenu() {
     refreshView();
+    console.log("COMMANDS INCLUDE: VIEW, UPDATE, CREATE, DELETE, HELP, QUIT.");
     console.log("ENTER A COMMAND:");
     getUserInput(mainMenuParams, processMainMenu);
 }
-
 function getBasicCharInfo(CharacterID, callback) {
     connection.query('CALL read_basic_char_info(\'' + CharacterID + '\')', function (error, results, fields) {
         if (error) throw error;
@@ -417,14 +451,15 @@ function displayHelpMenu() {
     console.log("\t-\t-\t-\tMAIN MENU COMMANDS\t-\t-\t-");
     console.log("CREATE\t-\tcreates a new character.");
     console.log("VIEW\t-\tshows the stats of the character.");
-    console.log("UPDATE\t-\tallows players to update their characters. (MOSTLY FINISHED)");
+    console.log("UPDATE\t-\tallows players to update their characters.");
     console.log("DELETE\t-\tdeletes character from the system.");
     console.log("HELP\t-\tshows the help menu.");
     console.log("QUIT\t-\texits the program.");
     console.log("\r\t-\t-\t-\tUPDATE COMMANDS\t-\t-\t-");
     console.log("LEVELUP\t-\tlevels up a character.");
-    console.log("RENAME\t-\trenames a character. (NOT FINISHED)");
+    console.log("RENAME\t-\trenames a character. (FUTURE UPDATE)");
     console.log("CLASS\t-\tchanges the character's class. ");
-    console.log("HEALTH\t-\tsets the character's current health. (NOT FINISHED)");
+    console.log("EQUIP\t-\tchanges a character's gear. ");
+    console.log("HEALTH\t-\tsubtracts a number from character's current health.");
     console.log("BACK\t-\tgoes back to main menu");
 }
