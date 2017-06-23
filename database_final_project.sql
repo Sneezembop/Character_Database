@@ -84,6 +84,10 @@ DELIMITER ;;
 	AFTER INSERT ON attributes
     FOR EACH ROW
 BEGIN
+/**
+ * Generates health points after character and attributes have been created
+ * Uses constitution score from attributes table to generate
+ */
     INSERT INTO health_points
     VALUES (NEW.character_id,5 + NEW.constitution,5 + NEW.constitution);
 END */;;
@@ -163,6 +167,9 @@ DELIMITER ;;
 	AFTER INSERT ON characters
     FOR EACH ROW
 BEGIN
+/**
+ * Generates attributes after character has been created
+ */
     INSERT INTO attributes
     VALUES (NEW.character_id,calculate_attribute_value(NEW.class_id,'strength',1),
 			calculate_attribute_value(NEW.class_id,'dexterity',1),
@@ -355,6 +362,9 @@ DELIMITER ;;
 	AFTER INSERT ON health_points
     FOR EACH ROW
 BEGIN
+/**
+ * Assigns default level 1 loadout equipment from class_equipment_loadout
+ */
 	INSERT INTO character_equipment
     SELECT this_char.character_id, equipment_id, quantity
     FROM 
@@ -380,6 +390,9 @@ DELIMITER ;;
 	BEFORE UPDATE ON health_points
     FOR EACH ROW
 BEGIN
+/**
+ * Prevents current health points from going beyond total health points
+ */
 	IF NEW.current_health_points > NEW.total_health_points THEN
 		SET NEW.current_health_points = NEW.total_health_points;
 	END IF;
@@ -551,7 +564,10 @@ DELIMITER ;;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;;
 /*!50003 SET @saved_time_zone      = @@time_zone */ ;;
 /*!50003 SET time_zone             = 'SYSTEM' */ ;;
-/*!50106 CREATE*/ /*!50117 DEFINER=`root`@`localhost`*/ /*!50106 EVENT `increase_health_event` ON SCHEDULE EVERY 30 SECOND STARTS '2017-06-23 13:42:04' ON COMPLETION NOT PRESERVE ENABLE DO BEGIN
+/*!50106 CREATE*/ /*!50117 DEFINER=`root`@`localhost`*/ /*!50106 EVENT `increase_health_event` ON SCHEDULE EVERY 30 SECOND STARTS '2017-06-23 16:17:50' ON COMPLETION NOT PRESERVE ENABLE DO BEGIN
+/**
+ * Passively increases characters health points over time
+ */
     UPDATE health_points
     SET current_health_points = current_health_points + 1;
 END */ ;;
@@ -582,6 +598,12 @@ CREATE DEFINER=`root`@`localhost` FUNCTION `calculate_attribute_value`(
     char_level INT
 ) RETURNS int(11)
 BEGIN
+/**
+ * Function to calculate attribute values.
+ * Takes in Class_ID for determining primary status
+ * attribute for which attribute is being calculated
+ * and character level for how high to set the attribute
+ */
 	DECLARE class_attrb1 ENUM('strength','dexterity','constitution','intelligence','wisdom','charisma');
     DECLARE class_attrb2 ENUM('strength','dexterity','constitution','intelligence','wisdom','charisma');
     
@@ -665,6 +687,9 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `add_equip_to_char`(
     eq_name VARCHAR(64)
 )
 BEGIN
+/** 
+ * Adds 1 quantity of the given equipment to the given character
+ */
 	DECLARE sql_error INT DEFAULT FALSE;
 	DECLARE eq_id INT;
     DECLARE cr_id INT;
@@ -1011,6 +1036,10 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `change_char_name`(
     new_name_param	VARCHAR(64)
 )
 BEGIN
+/**
+ * Procedure to change the name of a character
+ * Input: Old Name, New Name
+ */
 	DECLARE sql_error INT DEFAULT FALSE;
     DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
     SET sql_error = TRUE;
@@ -1021,10 +1050,8 @@ BEGIN
 
 
 	IF sql_error = FALSE THEN
-		COMMIT;
 		SELECT CONCAT(old_name_param, ', successfully changed to ', new_name_param) as Message;
 	ELSE
-		ROLLBACK;
 		SELECT 'Character name change was not successful' as Message;
 	END IF;
 END ;;
@@ -1048,6 +1075,10 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `change_class`(
     new_class_name VARCHAR(64)
 )
 BEGIN
+/**
+ * Procedure to change an already existing character to a new class
+ * takes in characters name and class name character is to be changed to
+ */
 	DECLARE sql_error INT DEFAULT FALSE;
     DECLARE c_id INT;
     DECLARE char_id INT;
@@ -1157,6 +1188,12 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `character_level_up`(
 	character_name_param VARCHAR(64)
 )
 BEGIN
+/**
+ * Levels up the given character by one level
+ * Updates Level field in Characters
+ * Updates Attributes in Attributes Table
+ * Updates Health Points
+ */
 	DECLARE sql_error INT DEFAULT FALSE;
     DECLARE c_id INT;
     DECLARE char_id INT;
@@ -1230,6 +1267,10 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `create_armor`(
     a_type ENUM('light','medium','heavy')
 )
 BEGIN
+/**
+ * Procedure to add new armor to database. All data user generated except for Equipment_ID.
+ * Takes as input the armor's name, weight, description, armor rating, and armor type.
+ */
 	DECLARE sql_error INT DEFAULT FALSE;
     
     DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
@@ -1272,6 +1313,10 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `create_character`(
     player_email_param VARCHAR(64)
 )
 BEGIN
+/**
+ * Procedure to create a new character in the game
+ * User Input: character_name, character_class, player_email
+ */
 	DECLARE sql_error INT DEFAULT FALSE;
     DECLARE c_id INT;
     
@@ -1323,6 +1368,10 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `create_melee_weapon`(
     mw_desc VARCHAR(140)
 )
 BEGIN
+/**
+ * Transaction to add new melee weapon to database.  All data user generated except for Equipment_ID.
+ * Takes in the melee weapon name, weight, hit modifier, damage modifier, type of weapon, reach, attribute modifier, and description.
+ */
 	DECLARE sql_error INT DEFAULT FALSE;
     
     DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
@@ -1368,6 +1417,10 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `create_new_class`(
     c_attrb2 ENUM('strength','intelligence','dexterity','wisdom','charisma','constitution')
 )
 BEGIN
+/**
+ * Transaction to add a new class to the game.
+ * User input consists of: class name, armor proficiency, weapon proficiency, class description, primary attribute 1, and primary attribute 2
+ */
 	DECLARE sql_error INT DEFAULT FALSE;
     
     DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
@@ -1403,6 +1456,10 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `create_new_skill`(
     s_attribute  ENUM('strength','intelligence','dexterity','wisdom','charisma','constitution')
 )
 BEGIN
+/**
+ * Transaction to add new Skill to the game
+ * Input: Skill Name, Skill Description, Skill Attribute
+ */
 	DECLARE sql_error INT DEFAULT FALSE;
     
     DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
@@ -1441,6 +1498,10 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `create_new_spell`(
     s_attribute ENUM('intelligence','wisdom','charisma')
 )
 BEGIN
+/**
+ * Transaction to add new Spell to the game
+ * Input: Spell Name, Spell Description, Spell Damage, Spell Healing, Spell Hit, Spell Attribute
+ */
 	DECLARE sql_error INT DEFAULT FALSE;
     
     DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
@@ -1476,6 +1537,10 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `create_player`(
     lname_param	VARCHAR(64)
 )
 BEGIN
+/**
+ * Procedure to create new player
+ * User Input: Email Address (PK), First Name, Last Name
+ */
 	INSERT INTO players (player_email, player_fname, player_lname)
     VALUES (email_param, fname_param, lname_param);
 END ;;
@@ -1503,6 +1568,10 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `create_ranged_weapon`(
     rw_description VARCHAR(140), rw_projectile VARCHAR(64)
 )
 BEGIN
+/**
+ * Transaction to add new ranged weapon to database.
+ * User Input: ranged weapon name, weight, hit modifier, damage modifier, type of weapon, reach, attribute modifier, description, and projectile name.
+ */
 	DECLARE sql_error INT DEFAULT FALSE;
     
     DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
@@ -1544,6 +1613,10 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `delete_character`(
     character_name_param	VARCHAR(64)
 )
 BEGIN
+/**
+ * Procedure to delete a character from the game
+ * takes in character's name as input
+ */
 	DECLARE sql_error INT DEFAULT FALSE;
     DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
     SET sql_error = TRUE;
@@ -1552,10 +1625,8 @@ BEGIN
 	WHERE character_name = character_name_param;
 	
 	IF sql_error = FALSE THEN
-		COMMIT;
 		SELECT CONCAT('Character , ',character_name_param, ', successfully deleted from game.') as Message;
 	ELSE
-		ROLLBACK;
 		SELECT 'Character deletion was not successful' as Message;
 	END IF;
 END ;;
@@ -1578,6 +1649,9 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `delete_class`(
     class_name_param	VARCHAR(64)
 )
 BEGIN
+/**
+ * Procedure to delete a class from the game
+ */
 	DECLARE sql_error INT DEFAULT FALSE;
     DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
     SET sql_error = TRUE;
@@ -1586,10 +1660,8 @@ BEGIN
 	WHERE class_name = class_name_param;
 	
 	IF sql_error = FALSE THEN
-		COMMIT;
 		SELECT CONCAT('Class , ',class_name_param, ', successfully deleted from game.') as Message;
 	ELSE
-		ROLLBACK;
 		SELECT 'Class deletion was not successful' as Message;
 	END IF;
 END ;;
@@ -1612,6 +1684,10 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `delete_equipment`(
     equipment_name_param	VARCHAR(64)
 )
 BEGIN
+/** 
+ * Procedure to delete equipment
+ * requires equipment name as input
+ */
 	DECLARE sql_error INT DEFAULT FALSE;
     DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
     SET sql_error = TRUE;
@@ -1620,10 +1696,8 @@ BEGIN
 	WHERE equipment_name = equipment_name_param;
 	
 	IF sql_error = FALSE THEN
-		COMMIT;
 		SELECT CONCAT('Equipment , ',equipment_name_param, ', successfully deleted from game.') as Message;
 	ELSE
-		ROLLBACK;
 		SELECT 'Equipment deletion was not successful' as Message;
 	END IF;
 END ;;
@@ -1646,6 +1720,9 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `delete_player`(
     player_email_param	VARCHAR(64)
 )
 BEGIN
+/**
+ * Procedure to delete a player from the game
+ */
 	DECLARE sql_error INT DEFAULT FALSE;
     DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
     SET sql_error = TRUE;
@@ -1654,10 +1731,8 @@ BEGIN
 	WHERE player_email = player_email_param;
 	
 	IF sql_error = FALSE THEN
-		COMMIT;
 		SELECT CONCAT('Player , ',player_email_param, ', successfully deleted from game.') as Message;
 	ELSE
-		ROLLBACK;
 		SELECT 'Player deletion was not successful' as Message;
 	END IF;
 END ;;
@@ -1680,6 +1755,10 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `delete_skills`(
     skill_name_param	VARCHAR(64)
 )
 BEGIN
+/** 
+ * Procedure to delete skills
+ * requires skill name as input
+ */
 	DECLARE sql_error INT DEFAULT FALSE;
     DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
     SET sql_error = TRUE;
@@ -1688,10 +1767,8 @@ BEGIN
 	WHERE skill_name = skill_name_param;
 	
 	IF sql_error = FALSE THEN
-		COMMIT;
 		SELECT CONCAT('Skill , ',skill_name_param, ', successfully deleted from game.') as Message;
 	ELSE
-		ROLLBACK;
 		SELECT 'Skill deletion was not successful' as Message;
 	END IF;
 END ;;
@@ -1714,6 +1791,10 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `delete_spells`(
     spell_name_param	VARCHAR(64)
 )
 BEGIN
+/**
+ * Procedure to delete spells
+ * requires spell name as input
+ */
 	DECLARE sql_error INT DEFAULT FALSE;
     DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
     SET sql_error = TRUE;
@@ -1722,10 +1803,8 @@ BEGIN
 	WHERE spell_name = spells_name_param;
 	
 	IF sql_error = FALSE THEN
-		COMMIT;
 		SELECT CONCAT('Spell , ',spell_name_param, ', successfully deleted from game.') as Message;
 	ELSE
-		ROLLBACK;
 		SELECT 'Spell deletion was not successful' as Message;
 	END IF;
 END ;;
@@ -1873,6 +1952,10 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `player_email_change`(
 		new_email_param	VARCHAR(64)
 	)
 BEGIN
+/**
+ * Procedure to change a player's email
+ * Input: Old Email, New Email
+ */
 	DECLARE sql_error INT DEFAULT FALSE;
     DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
     SET sql_error = TRUE;
@@ -1882,10 +1965,8 @@ BEGIN
 	WHERE player_email = old_email_param;
 
 	IF sql_error = FALSE THEN
-		COMMIT;
 		SELECT CONCAT(old_email_param, ', successfully changed to ', new_email_param) as Message;
 	ELSE
-		ROLLBACK;
 		SELECT 'Player email change was not successful' as Message;
 	END IF;
 END ;;
@@ -1907,7 +1988,10 @@ DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `read_all_characters`(
 	player_email_param	VARCHAR(64)
 )
-BEGIN        
+BEGIN
+/** 
+ * Displays all character names owned by the given player_email input
+ */
 	SELECT character_name
 	FROM characters, players WHERE players.player_id = characters.player_id AND players.player_email = player_email_param;
 END ;;
@@ -1927,7 +2011,10 @@ DELIMITER ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `read_all_players`()
-BEGIN        
+BEGIN
+/**
+ * Displays all information from the players table
+ */
 	SELECT *
 	FROM players;
 END ;;
@@ -1950,6 +2037,10 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `read_basic_char_info`(
 	char_id_param	INT
 )
 BEGIN        
+/**
+ * Reads basic info of a given character: Name, Level, Class Name, Current Health Points, Total Health Points
+ * Input: Character ID
+ */
 	SELECT c.character_name, c.character_level, cl.class_name, h.current_health_points, h.total_health_points
 	FROM characters c join class cl join health_points h
 		on c.class_id = cl.class_id
@@ -1975,6 +2066,10 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `read_character_detail`(
 	char_name_param	VARCHAR(64)
 )
 BEGIN        
+/**
+ * Displays all relevant character details for one specific character
+ * Input: Character Name
+ */
 	SELECT c.character_id, c.character_name, c.class_id, c.character_level, c.player_id,
 		a.strength, a.dexterity, a.constitution, a.intelligence, a.wisdom, a.charisma
 	FROM characters c join attributes a
@@ -2000,6 +2095,10 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `read_equipment_detail`(
 	char_id_param	INT
 )
 BEGIN        
+/** 
+ * Displays all equipment owned by a given character
+ * Input: Character ID
+ */
 	SELECT *
 	FROM character_equipment ce join equipment e 
 		ON ce.equip_id = e.equipment_id
@@ -2024,6 +2123,10 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `read_player_detail`(
 	player_email_param	VARCHAR(64)
 )
 BEGIN        
+/**
+ * Displays all player detail for the given player
+ * Input: Player_Email
+ */
 	SELECT *
 	FROM players
     WHERE player_email = player_email_param;
@@ -2047,6 +2150,10 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `read_skills_detail`(
 	char_id_param	INT
 )
 BEGIN        
+/** 
+ * Displays skills known by a given character
+ * Input: character ID
+ */
 	SELECT *
 	FROM class_skills cs join skills join characters c
 		ON cs.skill_id = skills.skill_id
@@ -2071,7 +2178,11 @@ DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `read_spells_detail`(
 	char_id_param	INT
 )
-BEGIN        
+BEGIN      
+/**
+ * Displays all spells accessible by a character
+ * Input: Character ID
+ */
 	SELECT *
 	FROM class_spells cs join spells join characters c
 		ON cs.spell_id = spells.spell_id
@@ -2098,6 +2209,10 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `remove_char_equipment`(
     eq_name VARCHAR(64)
 )
 BEGIN
+/**
+ * Removes specified equipment from character
+ * Subtracts 1 quantity. If quantity is zero, deletes the row from the character_equipment table
+ */
 	DECLARE sql_error INT DEFAULT FALSE;
 	DECLARE eq_id INT;
     DECLARE cr_id INT;
@@ -2157,6 +2272,10 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `update_health`(
     amount INT
 )
 BEGIN
+/**
+ * Updates health points
+ * takes in a down or up call to determine which way health points get updated 
+ */
 	DECLARE char_id INT;
     
     SELECT character_id into char_id
@@ -2188,4 +2307,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-06-23 13:42:44
+-- Dump completed on 2017-06-23 16:18:11
