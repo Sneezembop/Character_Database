@@ -120,7 +120,7 @@ function processCreateCharacter(input) {
     connection.query(query, function (error, results, fields) {
         if (error) throw error;
         refreshView();
-        console.log(query);
+       // console.log(query);
         console.log(results);
         getUserInput(mainMenuParams, processMainMenu);
     });
@@ -206,9 +206,9 @@ function equipChange(characterName) {
             getUserInput(['equip', 'itemName'], function (input) {
                 var myquery = '';
                 if (input.equip == 'EQUIP') {
-                    myquery = 'CALL add_equip_to_char(\'' + characterName + '\',\'' + input.equip + '\');';
+                    myquery = 'CALL add_equip_to_char(\'' + characterName + '\',\'' + input.itemName + '\');';
                 } else if (input.equip == 'UNEQUIP') {
-                    myquery = 'CALL remove_char_equipment(\'' + characterName + '\',\'' + input.equip + '\');';
+                    myquery = 'CALL remove_char_equipment(\'' + characterName + '\',\'' + input.itemName + '\');';
                 }
 
                 console.log(myquery);
