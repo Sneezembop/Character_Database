@@ -79,6 +79,21 @@ BEGIN
 END //
 DELIMITER ;
 
+DROP TRIGGER IF EXISTS assign_equipment_loadout;
+DELIMITER //
+CREATE TRIGGER assign_equipment_loadout
+	AFTER INSERT ON health_points
+    FOR EACH ROW
+BEGIN
+	INSERT INTO character_equipment
+    SELECT this_char.character_id, equipment_id, quantity
+    FROM 
+    (Select character_id, class_id FROM characters WHERE character_id = NEW.character_id) AS this_char
+    JOIN class_equipment_loadout
+    ON this_char.class_id = class_equipment_loadout.class_id;
+END //
+DELIMITER ;
+
 DROP TRIGGER IF EXISTS create_attribute_points;
 DELIMITER //
 CREATE TRIGGER create_attribute_points

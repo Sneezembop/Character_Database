@@ -41,14 +41,16 @@ BEGIN
         SELECT  calculate_attribute_value(c_id,'constitution',new_level) INTO constitution_score;
     
 		UPDATE characters
-        SET character_level = new_level, 
-			strength =  calculate_attribute_value(c_id,'strength',new_level),
+        SET character_level = new_level
+        WHERE char_id = characters.character_id;
+        
+        UPDATE attributes
+        SET strength =  calculate_attribute_value(c_id,'strength',new_level),
 			dexterity = calculate_attribute_value(c_id,'dexterity',new_level),
             constitution = constitution_score,
             intelligence =  calculate_attribute_value(c_id,'intelligence',new_level),
             wisdom =  calculate_attribute_value(c_id,'wisdom',new_level),
-            charisma =  calculate_attribute_value(c_id,'charisma',new_level)
-        WHERE char_id = characters.character_id;
+            charisma =  calculate_attribute_value(c_id,'charisma',new_level);
         
         UPDATE health_points
         SET total_health_points = total_health_points + constitution_score,
